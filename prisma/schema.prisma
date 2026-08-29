@@ -56,6 +56,7 @@ model Team {
   games         Game[]
   lineupEntries LineupEntry[]
   invites       TeamInvite[]
+  seasons       Season[]
 }
 
 model TeamMember {
@@ -95,9 +96,10 @@ model Player {
   parentsName String?
   createdAt   DateTime   @default(now())
 
-  team           Team          @relation(fields: [teamId], references: [id])
-  lineupEntries  LineupEntry[]
-  playerOfGameIn Game[]        @relation("PlayerOfGame")
+  team              Team           @relation(fields: [teamId], references: [id])
+  lineupEntries     LineupEntry[]
+  playerOfGameIn    Game[]         @relation("PlayerOfGame")
+  seasonMemberships SeasonPlayer[]
 
   @@unique([teamId, number])
   @@index([teamId, name])
@@ -106,6 +108,7 @@ model Player {
 model Game {
   id             String     @id @default(cuid())
   teamId         String
+  seasonId       String?
   date           DateTime
   location       String?
   opponent       String
@@ -119,11 +122,13 @@ model Game {
   createdAt      DateTime   @default(now())
 
   team          Team          @relation(fields: [teamId], references: [id])
+  season        Season?       @relation(fields: [seasonId], references: [id])
   playerOfGame  Player?       @relation("PlayerOfGame", fields: [playerOfGameId], references: [id])
   lineupEntries LineupEntry[]
 
   @@index([teamId, date])
   @@index([teamId, league])
+  @@index([seasonId, date])
 }
 
 model LineupEntry {
@@ -148,4 +153,35 @@ model LineupEntry {
   @@unique([gameId, playerId])
   @@index([teamId, playerId])
   @@index([teamId, gameId])
+}
+
+model Season {
+  id        String    @id @default(cuid())
+  teamId    String
+  name      String
+  startDate DateTime
+  endDate   DateTime?
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+
+  team   Team           @relation(fields: [teamId], references: [id])
+  roster SeasonPlayer[]
+  games  Game[]
+
+  @@index([teamId, active])
+}
+
+model SeasonPlayer {
+  id       String  @id @default(cuid())
+  seasonId String
+  playerId String
+  active   Boolean @default(true)
+
+  primaryPosition Position?
+
+  season Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([seasonId, playerId])
+  @@index([playerId])
 }
