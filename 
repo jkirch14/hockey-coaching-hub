@@ -1,0 +1,222 @@
+warning: in the working copy of 'app/api/bootstrap/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'lib/auth.ts', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/app/api/bootstrap/route.ts b/app/api/bootstrap/route.ts[m
+[1mindex 24895d5..02dce12 100644[m
+[1m--- a/app/api/bootstrap/route.ts[m
+[1m+++ b/app/api/bootstrap/route.ts[m
+[36m@@ -2,42 +2,101 @@[m [mimport { NextResponse } from "next/server";[m
+ import { db } from "@/lib/db";[m
+ import { auth } from "@/lib/auth";[m
+ [m
+[32m+[m[32mconst DEFAULT_SEASON = {[m
+[32m+[m[32m  name: "2026-27",[m
+[32m+[m[32m  startDate: new Date("2026-07-01T00:00:00.000Z"),[m
+[32m+[m[32m  endDate: new Date("2027-06-30T23:59:59.999Z"),[m
+[32m+[m[32m};[m
+[32m+[m
+ export async function POST() {[m
+   const session = await auth();[m
+[32m+[m
+   const uid = (session?.user as any)?.id as string | undefined;[m
+[31m-  if (!uid) return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });[m
+ [m
+[31m-  // If user already has a team membership, return it[m
+[32m+[m[32m  if (!uid) {[m
+[32m+[m[32m    return NextResponse.json([m
+[32m+[m[32m      { error: "UNAUTHENTICATED" },[m
+[32m+[m[32m      { status: 401 }[m
+[32m+[m[32m    );[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  // Existing team membership?[m
+   const existingMembership = await db.teamMember.findFirst({[m
+     where: { userId: uid },[m
+[31m-    include: { team: true },[m
+[32m+[m[32m    include: {[m
+[32m+[m[32m      team: {[m
+[32m+[m[32m        include: {[m
+[32m+[m[32m          seasons: {[m
+[32m+[m[32m            where: { active: true },[m
+[32m+[m[32m            orderBy: { startDate: "desc" },[m
+[32m+[m[32m            take: 1,[m
+[32m+[m[32m          },[m
+[32m+[m[32m        },[m
+[32m+[m[32m      },[m
+[32m+[m[32m    },[m
+   });[m
+ [m
+   if (existingMembership) {[m
+[32m+[m[32m    let season = existingMembership.team.seasons[0];[m
+[32m+[m
+[32m+[m[32m    // Repair/bootstrap a season if this team exists without one.[m
+[32m+[m[32m    if (!season) {[m
+[32m+[m[32m      season = await db.season.create({[m
+[32m+[m[32m        data: {[m
+[32m+[m[32m          teamId: existingMembership.teamId,[m
+[32m+[m[32m          ...DEFAULT_SEASON,[m
+[32m+[m[32m          active: true,[m
+[32m+[m[32m        },[m
+[32m+[m[32m      });[m
+[32m+[m[32m    }[m
+[32m+[m
+     return NextResponse.json({[m
+       teamId: existingMembership.teamId,[m
+[32m+[m[32m      seasonId: season.id,[m
+[32m+[m[32m      seasonName: season.name,[m
+       created: false,[m
+       role: existingMembership.role,[m
+       teamName: existingMembership.team.name,[m
+     });[m
+   }[m
+ [m
+[31m-  // Create first team and make user OWNER[m
+[32m+[m[32m  // Brand-new installation/user:[m
+[32m+[m[32m  // create Team + OWNER membership + active Season atomically.[m
+   const team = await db.team.create({[m
+     data: {[m
+       name: "My Hockey Team",[m
+       ownerId: uid,[m
+[32m+[m
+       members: {[m
+         create: {[m
+           userId: uid,[m
+           role: "OWNER",[m
+         },[m
+       },[m
+[32m+[m
+[32m+[m[32m      seasons: {[m
+[32m+[m[32m        create: {[m
+[32m+[m[32m          ...DEFAULT_SEASON,[m
+[32m+[m[32m          active: true,[m
+[32m+[m[32m        },[m
+[32m+[m[32m      },[m
+[32m+[m[32m    },[m
+[32m+[m
+[32m+[m[32m    include: {[m
+[32m+[m[32m      seasons: true,[m
+     },[m
+   });[m
+ [m
+[31m-  [m
+[31m-  return NextResponse.json({ teamId: team.id, created: true, role: "OWNER", teamName: team.name });[m
+[32m+[m[32m  const season = team.seasons[0];[m
+[32m+[m
+[32m+[m[32m  return NextResponse.json({[m
+[32m+[m[32m    teamId: team.id,[m
+[32m+[m[32m    seasonId: season.id,[m
+[32m+[m[32m    seasonName: season.name,[m
+[32m+[m[32m    created: true,[m
+[32m+[m[32m    role: "OWNER",[m
+[32m+[m[32m    teamName: team.name,[m
+[32m+[m[32m  });[m
+ }[m
+ [m
+[31m-export const runtime = "nodejs";[m
+[32m+[m[32mexport const runtime = "nodejs";[m
+\ No newline at end of file[m
+[1mdiff --git a/lib/auth.ts b/lib/auth.ts[m
+[1mindex 91fddbb..ddc4316 100644[m
+[1m--- a/lib/auth.ts[m
+[1m+++ b/lib/auth.ts[m
+[36m@@ -17,41 +17,84 @@[m [mexport const { handlers, auth, signIn, signOut } = NextAuth({[m
+     error: "/no-access",[m
+   },[m
+ [m
+[31m-callbacks: {[m
+[31m-  async signIn({ user }) {[m
+[31m-    const email = user.email?.toLowerCase().trim();[m
+[31m-    if (!email) return false;[m
+[31m-[m
+[31m-    // Optional allowlist[m
+[31m-    const raw = process.env.AUTH_EMAIL_ALLOWLIST ?? "";[m
+[31m-    const allowlist = new Set([m
+[31m-      raw.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean)[m
+[31m-    );[m
+[31m-    if (allowlist.has(email)) return true;[m
+[31m-[m
+[31m-    // Already a member of at least one team?[m
+[31m-    const uid = (user as any).id as string | undefined;[m
+[31m-    if (uid) {[m
+[31m-      const member = await db.teamMember.findFirst({[m
+[31m-        where: { userId: uid },[m
+[32m+[m[32m  callbacks: {[m
+[32m+[m[32m    async signIn({ user }) {[m
+[32m+[m[32m      const email = user.email?.toLowerCase().trim();[m
+[32m+[m[32m      if (!email) return false;[m
+[32m+[m
+[32m+[m[32m      const raw = process.env.AUTH_EMAIL_ALLOWLIST ?? "";[m
+[32m+[m[32m      const allowlist = new Set([m
+[32m+[m[32m        raw[m
+[32m+[m[32m          .split(",")[m
+[32m+[m[32m          .map((s) => s.trim().toLowerCase())[m
+[32m+[m[32m          .filter(Boolean)[m
+[32m+[m[32m      );[m
+[32m+[m
+[32m+[m[32m      const existingMember = await db.teamMember.findFirst({[m
+[32m+[m[32m        where: {[m
+[32m+[m[32m          user: {[m
+[32m+[m[32m            email,[m
+[32m+[m[32m          },[m
+[32m+[m[32m        },[m
+         select: { id: true },[m
+       });[m
+[31m-      if (member) return true;[m
+[31m-    }[m
+[31m-[m
+[31m-    // Pending (unaccepted + non-expired) invite for this email?[m
+[31m-    const invite = await db.teamInvite.findFirst({[m
+[31m-      where: {[m
+[31m-        email,[m
+[31m-        acceptedAt: null,[m
+[31m-        expiresAt: { gt: new Date() },[m
+[31m-      },[m
+[31m-      select: { id: true },[m
+[31m-    });[m
+[31m-[m
+[31m-    return !!invite;[m
+[31m-  },[m
+[31m-},[m
+ [m
+[32m+[m[32m      const pendingInvite = await db.teamInvite.findFirst({[m
+[32m+[m[32m        where: {[m
+[32m+[m[32m          email,[m
+[32m+[m[32m          acceptedAt: null,[m
+[32m+[m[32m          expiresAt: { gt: new Date() },[m
+[32m+[m[32m        },[m
+[32m+[m[32m        select: { id: true },[m
+[32m+[m[32m      });[m
+[32m+[m
+[32m+[m[32m      const allowed =[m
+[32m+[m[32m        allowlist.has(email) ||[m
+[32m+[m[32m        !!existingMember ||[m
+[32m+[m[32m        !!pendingInvite;[m
+[32m+[m
+[32m+[m[32m      if (!allowed) return false;[m
+[32m+[m
+[32m+[m[32m      // Ensure every authorized Google user has a local Prisma User row.[m
+[32m+[m[32m      await db.user.upsert({[m
+[32m+[m[32m        where: { email },[m
+[32m+[m[32m        update: {[m
+[32m+[m[32m          name: user.name ?? undefined,[m
+[32m+[m[32m          image: user.image ?? undefined,[m
+[32m+[m[32m        },[m
+[32m+[m[32m        create: {[m
+[32m+[m[32m          email,[m
+[32m+[m[32m          name: user.name ?? null,[m
+[32m+[m[32m          image: user.image ?? null,[m
+[32m+[m[32m        },[m
+[32m+[m[32m      });[m
+[32m+[m
+[32m+[m[32m      return true;[m
+[32m+[m[32m    },[m
+[32m+[m
+[32m+[m[32m    async jwt({ token }) {[m
+[32m+[m[32m      const email = token.email?.toLowerCase().trim();[m
+[32m+[m
+[32m+[m[32m      if (email && !(token as any).dbUserId) {[m
+[32m+[m[32m        const dbUser = await db.user.findUnique({[m
+[32m+[m[32m          where: { email },[m
+[32m+[m[32m          select: { id: true },[m
+[32m+[m[32m        });[m
+ [m
+[31m-});
