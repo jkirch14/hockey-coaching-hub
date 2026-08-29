@@ -32,9 +32,9 @@ export default function LoginPage({
           padding: 18,
         }}
       >
-        <div style={{ fontWeight: 950, fontSize: 22 }}>Hockey Stat Tracker</div>
+        <div style={{ fontWeight: 950, fontSize: 22 }}>Hockey Coaching Hub</div>
         <div style={{ marginTop: 6, opacity: 0.75 }}>
-          Track games, lineups, and team/player stats.
+          Plan. Develop. Analyze. Coach better.
         </div>
 
         <div style={{ marginTop: 16, padding: 12, borderRadius: 12, background: "#fafafa", border: "1px solid #eee" }}>

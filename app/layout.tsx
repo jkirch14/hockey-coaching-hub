@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 import TeamSync from "@/app/_components/TeamSync";
 
 export const metadata: Metadata = {
-  title: "Hockey Stat Tracker",
+  title: "Hockey Coaching Hub",
   description: "Track games, lineups, and stats",
 };
 
@@ -101,7 +101,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             >
               <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 260 }}>
                 <a href="/dashboard" style={{ textDecoration: "none", color: "black" }}>
-                  <div style={{ fontWeight: 950 }}>Hockey Stat Tracker</div>
+                  <div style={{ fontWeight: 950 }}>Hockey Coaching Hub</div>
                   <div style={{ fontSize: 12, opacity: 0.7, fontWeight: 700 }}>
                     {userName || userEmail}
                   </div>
