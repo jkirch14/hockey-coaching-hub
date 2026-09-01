@@ -33,6 +33,35 @@ enum Position {
   OTHER
 }
 
+enum EvaluationConfidence {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ObservationSource {
+  GAME
+  PRACTICE
+  GENERAL
+}
+
+enum ObservationCategory {
+  SKATING
+  SPEED
+  PUCK_CONTROL
+  PASSING
+  SHOOTING
+  HOCKEY_IQ
+  COMPETE
+  DEFENSE
+  POSITIONING
+  TEAM_PLAY
+  LEADERSHIP
+  GOALTENDING
+  CHEMISTRY
+  OTHER
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -50,13 +79,14 @@ model Team {
   ownerId   String
   createdAt DateTime @default(now())
 
-  owner         User          @relation("TeamOwner", fields: [ownerId], references: [id])
-  members       TeamMember[]
-  players       Player[]
-  games         Game[]
-  lineupEntries LineupEntry[]
-  invites       TeamInvite[]
-  seasons       Season[]
+  owner             User               @relation("TeamOwner", fields: [ownerId], references: [id])
+  members           TeamMember[]
+  players           Player[]
+  games             Game[]
+  lineupEntries     LineupEntry[]
+  invites           TeamInvite[]
+  seasons           Season[]
+  coachObservations CoachObservation[]
 }
 
 model TeamMember {
@@ -96,10 +126,12 @@ model Player {
   parentsName String?
   createdAt   DateTime   @default(now())
 
-  team              Team           @relation(fields: [teamId], references: [id])
+  team              Team               @relation(fields: [teamId], references: [id])
   lineupEntries     LineupEntry[]
-  playerOfGameIn    Game[]         @relation("PlayerOfGame")
+  playerOfGameIn    Game[]             @relation("PlayerOfGame")
   seasonMemberships SeasonPlayer[]
+  evaluations       PlayerEvaluation[]
+  coachObservations CoachObservation[]
 
   @@unique([teamId, number])
   @@index([teamId, name])
@@ -121,10 +153,11 @@ model Game {
   playerOfGameId String?
   createdAt      DateTime   @default(now())
 
-  team          Team          @relation(fields: [teamId], references: [id])
-  season        Season?       @relation(fields: [seasonId], references: [id])
-  playerOfGame  Player?       @relation("PlayerOfGame", fields: [playerOfGameId], references: [id])
-  lineupEntries LineupEntry[]
+  team              Team               @relation(fields: [teamId], references: [id])
+  season            Season?            @relation(fields: [seasonId], references: [id])
+  playerOfGame      Player?            @relation("PlayerOfGame", fields: [playerOfGameId], references: [id])
+  lineupEntries     LineupEntry[]
+  coachObservations CoachObservation[]
 
   @@index([teamId, date])
   @@index([teamId, league])
@@ -164,9 +197,11 @@ model Season {
   active    Boolean   @default(true)
   createdAt DateTime  @default(now())
 
-  team   Team           @relation(fields: [teamId], references: [id])
-  roster SeasonPlayer[]
-  games  Game[]
+  team              Team               @relation(fields: [teamId], references: [id])
+  roster            SeasonPlayer[]
+  games             Game[]
+  playerEvaluations PlayerEvaluation[]
+  coachObservations CoachObservation[]
 
   @@index([teamId, active])
 }
@@ -184,4 +219,69 @@ model SeasonPlayer {
 
   @@unique([seasonId, playerId])
   @@index([playerId])
+}
+
+model PlayerEvaluation {
+  id       String @id @default(cuid())
+  seasonId String
+  playerId String
+
+  coachRank Int?
+
+  primaryPosition    Position?
+  secondaryPositions Position[]
+
+  playerType String?
+  confidence EvaluationConfidence @default(LOW)
+
+  skating          Int?
+  speed            Int?
+  puckControl      Int?
+  passing          Int?
+  shooting         Int?
+  hockeyIQ         Int?
+  compete          Int?
+  defensiveAbility Int?
+  positioning      Int?
+  teamPlay         Int?
+
+  strengths             String?
+  developmentPriorities String?
+  coachNotes            String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  season Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([seasonId, playerId])
+  @@index([playerId])
+}
+
+model CoachObservation {
+  id       String  @id @default(cuid())
+  teamId   String
+  seasonId String?
+  playerId String
+  gameId   String?
+
+  date     DateTime            @default(now())
+  source   ObservationSource
+  category ObservationCategory
+
+  note String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  team   Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  season Season? @relation(fields: [seasonId], references: [id], onDelete: SetNull)
+  player Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  game   Game?   @relation(fields: [gameId], references: [id], onDelete: SetNull)
+
+  @@index([teamId, date])
+  @@index([playerId, date])
+  @@index([gameId])
+  @@index([seasonId])
 }
