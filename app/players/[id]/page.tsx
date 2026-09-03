@@ -122,6 +122,16 @@ export default function PlayerCoachingPage() {
   const [player, setPlayer] = useState<Player | null>(null);
   const [status, setStatus] = useState("");
 
+  useEffect(() => {
+    if (!status || status.startsWith("Saving")) return;
+
+    const timer = window.setTimeout(() => {
+      setStatus("");
+    }, 5000);
+
+    return () => window.clearTimeout(timer);
+  }, [status]);
+
   const [name, setName] = useState("");
   const [number, setNumber] = useState("");
   const [shootSide, setShootSide] = useState<"" | "LEFT" | "RIGHT">("");
@@ -691,6 +701,7 @@ export default function PlayerCoachingPage() {
     </main>
   );
 }
+
 
 
 
