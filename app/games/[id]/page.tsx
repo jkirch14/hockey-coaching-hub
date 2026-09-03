@@ -37,6 +37,16 @@ export default function GameEditPage() {
   const [game, setGame] = useState<Game | null>(null);
   const [status, setStatus] = useState("");
 
+  useEffect(() => {
+    if (!status || status === "Saving...") return;
+
+    const timer = window.setTimeout(() => {
+      setStatus("");
+    }, 5000);
+
+    return () => window.clearTimeout(timer);
+  }, [status]);
+
   const [date, setDate] = useState("");
   const [location, setLocation] = useState("");
   const [opponent, setOpponent] = useState("");
@@ -280,8 +290,12 @@ export default function GameEditPage() {
         </div>
 
         <div className={styles.actions}>
-          <button className={styles.button} onClick={save}>
-            Save Game
+          <button
+            className={styles.button}
+            onClick={save}
+            disabled={status === "Saving..."}
+          >
+            {status === "Saving..." ? "Saving..." : "Save Game"}
           </button>
 
           <Link
@@ -296,8 +310,13 @@ export default function GameEditPage() {
           </button>
         </div>
 
-        {status && <p className={styles.status}>{status}</p>}
+        {status && (
+          <div className={`app-toast ${status.startsWith("Error") ? "app-toast-error" : ""}`}>
+            {status}
+          </div>
+        )}
       </section>
     </main>
   );
 }
+

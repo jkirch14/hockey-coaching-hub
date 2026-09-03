@@ -29,6 +29,20 @@ function toLocalInputValue(d: Date) {
 export default function GamesPage() {
   const [teamId, setTeamId] = useState("");
   const [status, setStatus] = useState("");
+
+  useEffect(() => {
+    if (
+      !status ||
+      status.startsWith("Adding") ||
+      status.startsWith("Loading")
+    ) return;
+
+    const timer = window.setTimeout(() => {
+      setStatus("");
+    }, 5000);
+
+    return () => window.clearTimeout(timer);
+  }, [status]);
   const [games, setGames] = useState<Game[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
 
@@ -256,12 +270,20 @@ export default function GamesPage() {
           />
         </div>
 
-        <button className={styles.primaryButton} onClick={addGame}>
-          Add Game
+        <button
+          className={styles.primaryButton}
+          onClick={addGame}
+          disabled={status === "Adding game..."}
+        >
+          {status === "Adding game..." ? "Adding..." : "Add Game"}
         </button>
       </details>
 
-      {status && <p className={styles.status}>{status}</p>}
+      {status && (
+        <div className={`app-toast ${status.startsWith("Error") ? "app-toast-error" : ""}`}>
+          {status}
+        </div>
+      )}
 
       <section style={{ marginTop: 18 }}>
         <h2 className={styles.cardTitle}>Game Log ({games.length})</h2>
@@ -343,3 +365,4 @@ export default function GamesPage() {
     </main>
   );
 }
+

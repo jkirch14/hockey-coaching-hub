@@ -17,6 +17,20 @@ export default function PlayersPage() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [status, setStatus] = useState("");
 
+  useEffect(() => {
+    if (
+      !status ||
+      status.startsWith("Adding") ||
+      status.startsWith("Loading")
+    ) return;
+
+    const timer = window.setTimeout(() => {
+      setStatus("");
+    }, 5000);
+
+    return () => window.clearTimeout(timer);
+  }, [status]);
+
   const [name, setName] = useState("");
   const [number, setNumber] = useState("");
   const [shootSide, setShootSide] =
@@ -179,12 +193,20 @@ export default function PlayersPage() {
           />
         </div>
 
-        <button className={styles.addButton} onClick={addPlayer}>
-          Add Player
+        <button
+          className={styles.addButton}
+          onClick={addPlayer}
+          disabled={status === "Adding player..."}
+        >
+          {status === "Adding player..." ? "Adding..." : "Add Player"}
         </button>
       </details>
 
-      {status && <p className={styles.status}>{status}</p>}
+      {status && (
+        <div className={`app-toast ${status.startsWith("Error") ? "app-toast-error" : ""}`}>
+          {status}
+        </div>
+      )}
 
       <section className={styles.rosterSection}>
         <h2 className={styles.rosterTitle}>
@@ -259,3 +281,4 @@ export default function PlayersPage() {
     </main>
   );
 }
+

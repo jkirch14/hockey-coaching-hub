@@ -30,6 +30,16 @@ export default function LineupEditorPage() {
   const [game, setGame] = useState<Game | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [status, setStatus] = useState("");
+
+  useEffect(() => {
+    if (!status || status === "Saving lineup...") return;
+
+    const timer = window.setTimeout(() => {
+      setStatus("");
+    }, 5000);
+
+    return () => window.clearTimeout(timer);
+  }, [status]);
   const [map, setMap] = useState<Record<string, Entry>>({});
 
   const includedCount = useMemo(
@@ -125,10 +135,11 @@ export default function LineupEditorPage() {
       return {
         playerId: e.playerId,
         position: e.position,
-        line:
-          trimmed === ""
-            ? null
-            : Number.parseInt(trimmed, 10),
+        line: (() => {
+          if (trimmed === "") return null;
+          const parsed = Number.parseInt(trimmed, 10);
+          return Number.isFinite(parsed) ? parsed : null;
+        })(),
         goals: e.goals,
         assists: e.assists,
         penalties: e.penalties,
@@ -299,10 +310,19 @@ export default function LineupEditorPage() {
       )}
 
       <div className={styles.saveBar}>
-        <button className={styles.saveButton} onClick={save}>
-          Save Lineup
+        <button
+          className={styles.saveButton}
+          onClick={save}
+          disabled={status === "Saving lineup..."}
+        >
+          {status === "Saving lineup..." ? "Saving..." : "Save Lineup"}
         </button>
-        {status && <span>{status}</span>}
+
+        {status && (
+          <div className={`app-toast ${status.startsWith("Error") ? "app-toast-error" : ""}`}>
+            {status}
+          </div>
+        )}
       </div>
 
       <div className={styles.mobileCards}>
@@ -421,3 +441,4 @@ export default function LineupEditorPage() {
     </main>
   );
 }
+
