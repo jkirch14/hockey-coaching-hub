@@ -90,7 +90,7 @@ function LineChartGFGA({
       {points.map((p: any, i) => (
   <g key={i}>
     <title>
-      {`${p.xLabel} vs ${p.opponent}${p.league ? ` â€¢ ${p.league}` : ""}\nGF ${p.gf} â€¢ GA ${p.ga} â€¢ ${p.result}`}
+      {`${p.xLabel} vs ${p.opponent}${p.league ? ` | ${p.league}` : ""}\nGF ${p.gf} | GA ${p.ga} | ${p.result}`}
     </title>
     <circle cx={x(i)} cy={y(p.gf)} r="3" fill="black" />
     <circle cx={x(i)} cy={y(p.ga)} r="3" fill="black" opacity="0.75" />
@@ -171,7 +171,7 @@ function CumulativeGDChart({
         return (
           <g key={i}>
             <title>
-              {`${p.xLabel} vs ${p.opponent}${p.league ? ` â€¢ ${p.league}` : ""}\nGame GD ${perGame} â€¢ Cum GD ${v} â€¢ ${p.result}`}
+              {`${p.xLabel} vs ${p.opponent}${p.league ? ` | ${p.league}` : ""}\nGame GD ${perGame} | Cum GD ${v} | ${p.result}`}
             </title>
             <circle cx={x(i)} cy={y(v)} r="3" fill="black" />
           </g>
@@ -180,7 +180,7 @@ function CumulativeGDChart({
 
 
       <text x={pad} y={pad - 2} fontSize="12" fill="#555" fontWeight="700">
-        Cumulative Goal Differential (running GF âˆ’ GA)
+        Cumulative Goal Differential (running GF - GA)
       </text>
 
       {/* x labels: first/mid/last */}
@@ -330,7 +330,7 @@ function LeagueBars({
             </div>
 
             <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7 }}>
-              Wins (dark) â€¢ Ties (mid) â€¢ Losses (light)
+              Wins (dark) | Ties (mid) | Losses (light)
             </div>
           </div>
         );
@@ -365,7 +365,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     (async () => {
-      setMsg("Setting up your teamâ€¦");
+      setMsg("Setting up your team...");
       const res = await fetch("/api/bootstrap", { method: "POST" });
       const json = (await res.json()) as BootstrapResult;
       setBoot(json);
@@ -383,7 +383,7 @@ export default function DashboardPage() {
     if (!teamId) return;
 
     (async () => {
-      setMsg("Loading statsâ€¦");
+      setMsg("Loading stats...");
       const [tRes, pRes, trRes] = await Promise.all([
         fetch(`/api/stats/team?teamId=${encodeURIComponent(teamId)}`),
         fetch(`/api/stats/players?teamId=${encodeURIComponent(teamId)}`),
@@ -430,20 +430,20 @@ export default function DashboardPage() {
     })();
   }, [teamId]);
 
-  const record = teamStats ? `${teamStats.totals.wins}-${teamStats.totals.losses}-${teamStats.totals.ties}` : "â€”";
-  const gfga = teamStats ? `${teamStats.totals.goalsFor} / ${teamStats.totals.goalsAgainst}` : "â€”";
-  const gd = teamStats ? `${teamStats.totals.goalDiff}` : "â€”";
+  const record = teamStats ? `${teamStats.totals.wins}-${teamStats.totals.losses}-${teamStats.totals.ties}` : "-";
+  const gfga = teamStats ? `${teamStats.totals.goalsFor} / ${teamStats.totals.goalsAgainst}` : "-";
+  const gd = teamStats ? `${teamStats.totals.goalDiff}` : "-";
 
   return (
     <main className={styles.page}>
       <header className={styles.pageHeader}>
         <div>
           <h1 className={styles.title}>
-            Dashboard{boot && !("error" in boot) ? ` â€¢ ${boot.teamName}` : ""}
+            Dashboard{boot && !("error" in boot) ? ` | ${boot.teamName}` : ""}
           </h1>
           {boot && !("error" in boot) ? (
             <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7 }}>
-              Role: <b>{boot.role}</b> â€¢ Team ID: <code>{boot.teamId}</code>
+              Role: <b>{boot.role}</b> | Team ID: <code>{boot.teamId}</code>
             </div>
           ) : null}
         </div>
@@ -461,8 +461,8 @@ export default function DashboardPage() {
       <section className={styles.statsGrid}>
         <Card title="Record" value={record} sub={teamStats ? `${teamStats.totals.games} games` : ""} />
         <Card title="Goals For / Against" value={gfga} sub={teamStats ? `GD: ${gd}` : ""} />
-        <Card title="Penalties" value={teamStats ? String(teamStats.totals.penalties) : "â€”"} />
-        <Card title="Shutouts" value={teamStats ? String(teamStats.totals.shutouts) : "â€”"} />
+        <Card title="Penalties" value={teamStats ? String(teamStats.totals.penalties) : "-"} />
+        <Card title="Shutouts" value={teamStats ? String(teamStats.totals.shutouts) : "-"} />
       </section>
 
       <section className={styles.splitGrid}>
