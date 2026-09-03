@@ -19,7 +19,7 @@ type Entry = {
 };
 
 const POSITIONS: Entry["position"][] = [
-  "C", "LW", "RW", "LD", "RD", "G", "OTHER"
+  "LW", "C", "RW", "LD", "RD", "G", "OTHER"
 ];
 
 export default function LineupEditorPage() {
@@ -46,6 +46,86 @@ export default function LineupEditorPage() {
     () => Object.keys(map).length,
     [map]
   );
+
+  const orderedPlayers = useMemo(() => {
+    const positionOrder: Record<Entry["position"], number> = {
+      LW: 1,
+      C: 2,
+      RW: 3,
+      LD: 4,
+      RD: 5,
+      G: 6,
+      OTHER: 7,
+    };
+
+    return [...players].sort((a, b) => {
+      const aEntry = map[a.id];
+      const bEntry = map[b.id];
+
+      // Players currently in the lineup come first.
+      if (!!aEntry !== !!bEntry) {
+        return aEntry ? -1 : 1;
+      }
+
+      // Players not currently in the lineup fall back to jersey/name.
+      if (!aEntry || !bEntry) {
+        const aNumber = a.number ?? 999;
+        const bNumber = b.number ?? 999;
+
+        if (aNumber !== bNumber) return aNumber - bNumber;
+        return a.name.localeCompare(b.name);
+      }
+
+      const aPosition = positionOrder[aEntry.position] ?? 99;
+      const bPosition = positionOrder[bEntry.position] ?? 99;
+
+      const aIsForward = ["LW", "C", "RW"].includes(aEntry.position);
+      const bIsForward = ["LW", "C", "RW"].includes(bEntry.position);
+
+      const aIsDefense = ["LD", "RD"].includes(aEntry.position);
+      const bIsDefense = ["LD", "RD"].includes(bEntry.position);
+
+      const groupOrder = (entry: Entry) => {
+        if (["LW", "C", "RW"].includes(entry.position)) return 1;
+        if (["LD", "RD"].includes(entry.position)) return 2;
+        if (entry.position === "G") return 3;
+        return 4;
+      };
+
+      const aGroup = groupOrder(aEntry);
+      const bGroup = groupOrder(bEntry);
+
+      if (aGroup !== bGroup) return aGroup - bGroup;
+
+      // Within forwards and defense, line/pair number comes first.
+      if (
+        (aIsForward && bIsForward) ||
+        (aIsDefense && bIsDefense)
+      ) {
+        const aLine = Number.parseInt(aEntry.lineText, 10);
+        const bLine = Number.parseInt(bEntry.lineText, 10);
+
+        const safeALine = Number.isFinite(aLine) ? aLine : 999;
+        const safeBLine = Number.isFinite(bLine) ? bLine : 999;
+
+        if (safeALine !== safeBLine) {
+          return safeALine - safeBLine;
+        }
+      }
+
+      // Then enforce left -> middle -> right position order.
+      if (aPosition !== bPosition) {
+        return aPosition - bPosition;
+      }
+
+      const aNumber = a.number ?? 999;
+      const bNumber = b.number ?? 999;
+
+      if (aNumber !== bNumber) return aNumber - bNumber;
+
+      return a.name.localeCompare(b.name);
+    });
+  }, [players, map]);
 
   useEffect(() => {
     setTeamId(localStorage.getItem("teamId") ?? "");
@@ -326,7 +406,7 @@ export default function LineupEditorPage() {
       </div>
 
       <div className={styles.mobileCards}>
-        {players.map(playerCard)}
+        {orderedPlayers.map(playerCard)}
       </div>
 
       <div className={styles.desktopTable}>
@@ -344,7 +424,7 @@ export default function LineupEditorPage() {
           <div>SO</div>
         </div>
 
-        {players.map((p) => {
+        {orderedPlayers.map((p) => {
           const e = map[p.id];
           const included = !!e;
 
@@ -441,4 +521,7 @@ export default function LineupEditorPage() {
     </main>
   );
 }
+
+
+
 

@@ -103,7 +103,8 @@ function LineupSummary({ entries }: { entries: GameLineupEntry[] }) {
   function groupedCards(
     title: string,
     items: GameLineupEntry[],
-    groupLabel: string
+    groupLabel: string,
+    positions: string[]
   ) {
     const numbers = lineNumbers(items);
     const unassigned = items.filter((entry) => entry.line === null);
@@ -116,13 +117,7 @@ function LineupSummary({ entries }: { entries: GameLineupEntry[] }) {
 
         <div className={styles.lineupCards}>
           {numbers.map((line) => {
-            const players = items
-              .filter((entry) => entry.line === line)
-              .sort(
-                (a, b) =>
-                  (positionOrder[a.position] ?? 99) -
-                  (positionOrder[b.position] ?? 99)
-              );
+            const players = items.filter((entry) => entry.line === line);
 
             return (
               <div key={`${title}-${line}`} className={styles.lineupCard}>
@@ -131,7 +126,48 @@ function LineupSummary({ entries }: { entries: GameLineupEntry[] }) {
                 </div>
 
                 <div className={styles.lineupPlayers}>
-                  {players.map(playerChip)}
+                  {positions.map((position) => {
+                    const slotPlayers = players.filter(
+                      (entry) => entry.position === position
+                    );
+
+                    if (!slotPlayers.length) {
+                      return (
+                        <div
+                          key={`${title}-${line}-${position}`}
+                          className={styles.lineupPlayer}
+                        >
+                          <div className={styles.lineupPosition}>
+                            {position}
+                          </div>
+                          <div className={styles.lineupPlayerName}>—</div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div
+                        key={`${title}-${line}-${position}`}
+                        className={styles.lineupPlayer}
+                      >
+                        <div className={styles.lineupPosition}>
+                          {position}
+                        </div>
+
+                        {slotPlayers.map((entry) => (
+                          <div
+                            key={entry.id}
+                            className={styles.lineupPlayerName}
+                          >
+                            {entry.player.number !== null
+                              ? `#${entry.player.number} `
+                              : ""}
+                            {entry.player.name}
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             );
@@ -163,8 +199,8 @@ function LineupSummary({ entries }: { entries: GameLineupEntry[] }) {
         <span>{entries.length} players</span>
       </div>
 
-      {groupedCards("Forwards", forwards, "Line")}
-      {groupedCards("Defense", defense, "Pair")}
+      {groupedCards("Forwards", forwards, "Line", ["LW", "C", "RW"])}
+      {groupedCards("Defense", defense, "Pair", ["LD", "RD"])}
 
       {goalies.length > 0 && (
         <div className={styles.lineupGroup}>
@@ -527,6 +563,7 @@ export default function GameEditPage() {
     </main>
   );
 }
+
 
 
 
