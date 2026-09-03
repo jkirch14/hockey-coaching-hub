@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import styles from "./PlayerCoaching.module.css";
 
 type Position = "C" | "LW" | "RW" | "LD" | "RD" | "G" | "OTHER";
 type Confidence = "LOW" | "MEDIUM" | "HIGH";
@@ -112,36 +113,6 @@ function emptyEvaluation(): Omit<Evaluation, "id"> {
     coachNotes: null,
   };
 }
-
-const cardStyle = {
-  marginTop: 16,
-  padding: 16,
-  border: "1px solid #ddd",
-  borderRadius: 12,
-  background: "#fff",
-};
-
-const inputStyle = {
-  width: "100%",
-  padding: 10,
-  borderRadius: 10,
-  border: "1px solid #ccc",
-  boxSizing: "border-box" as const,
-};
-
-const labelStyle = {
-  display: "block",
-  fontWeight: 600,
-  marginBottom: 6,
-};
-
-const buttonStyle = {
-  padding: "10px 14px",
-  borderRadius: 10,
-  border: "1px solid #ccc",
-  cursor: "pointer",
-  fontWeight: 700,
-};
 
 export default function PlayerCoachingPage() {
   const params = useParams<{ id: string }>();
@@ -257,8 +228,8 @@ export default function PlayerCoachingPage() {
       return;
     }
 
-    setStatus("Evaluation saved.");
     await load();
+    setStatus("Evaluation saved.");
   }
 
   async function addObservation() {
@@ -290,8 +261,8 @@ export default function PlayerCoachingPage() {
     }
 
     setObservationNote("");
-    setStatus("Observation saved.");
     await load();
+    setStatus("Observation saved.");
   }
 
   async function savePlayerDetails() {
@@ -319,15 +290,13 @@ export default function PlayerCoachingPage() {
       return;
     }
 
-    setStatus("Player details saved.");
     await load();
+    setStatus("Player details saved.");
   }
 
   async function removePlayer() {
     if (!teamId) return setStatus("Missing teamId.");
     if (!confirm("Delete this player?")) return;
-
-    setStatus("Deleting...");
 
     const res = await fetch(
       `/api/players/${params.id}?teamId=${encodeURIComponent(teamId)}`,
@@ -345,291 +314,62 @@ export default function PlayerCoachingPage() {
   }
 
   if (!player) {
-    return (
-      <main
-        style={{
-          padding: 24,
-          fontFamily: "system-ui, sans-serif",
-          maxWidth: 1000,
-          margin: "0 auto",
-        }}
-      >
-        <p>{status || "Loading..."}</p>
-      </main>
-    );
+    return <main className={styles.page}>{status || "Loading..."}</main>;
   }
 
   return (
-    <main
-      style={{
-        padding: 24,
-        fontFamily: "system-ui, sans-serif",
-        maxWidth: 1000,
-        margin: "0 auto",
-      }}
-    >
-      <header>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            gap: 16,
-            flexWrap: "wrap",
-          }}
-        >
+    <main className={styles.page}>
+      <header className={styles.header}>
+        <div className={styles.headerTop}>
           <div>
-            <h1 style={{ fontSize: 30, fontWeight: 800, marginBottom: 4 }}>
+            <h1 className={styles.playerName}>
               {player.number !== null ? `#${player.number} ` : ""}
               {player.name}
             </h1>
 
-            <div style={{ opacity: 0.75 }}>
-              {evaluation.primaryPosition ?? "Position not evaluated"}
-              {evaluation.coachRank
-                ? ` • Coach Rank #${evaluation.coachRank}`
-                : ""}
-              {player.activeSeason
-                ? ` • ${player.activeSeason.name}`
-                : " • No active season"}
+            <div className={styles.summary}>
+              <span className={styles.badge}>
+                {evaluation.primaryPosition ?? "Position not set"}
+              </span>
+
+              {evaluation.coachRank && (
+                <span className={styles.badge}>
+                  Rank #{evaluation.coachRank}
+                </span>
+              )}
+
+              {player.activeSeason && (
+                <span className={styles.badge}>
+                  {player.activeSeason.name}
+                </span>
+              )}
             </div>
           </div>
 
-          <nav style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <Link href="/players">Players</Link>
+          <nav className={styles.nav}>
+            <Link href="/players">Roster</Link>
             <Link href={`/players/${player.id}/stats`}>Stats</Link>
-            <Link href="/dashboard">Dashboard</Link>
+            <Link href="/dashboard">Home</Link>
           </nav>
         </div>
       </header>
 
-      {status && (
-        <div
-          style={{
-            marginTop: 16,
-            padding: 10,
-            borderRadius: 10,
-            background: "#f5f5f5",
-          }}
-        >
-          {status}
-        </div>
-      )}
+      {status && <div className={styles.status}>{status}</div>}
 
-      <section style={cardStyle}>
-        <h2 style={{ fontSize: 20, fontWeight: 800, marginTop: 0 }}>
-          Coaching Evaluation
-        </h2>
+      <section className={styles.primaryCard}>
+        <h2 className={styles.sectionTitle}>Quick Observation</h2>
 
-        {!player.activeSeason && (
-          <p>
-            This team does not currently have an active season. Evaluation
-            data cannot be saved until one exists.
-          </p>
-        )}
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            gap: 12,
-          }}
-        >
-          <div>
-            <label style={labelStyle}>Coach Rank</label>
-            <input
-              type="number"
-              min="1"
-              value={evaluation.coachRank ?? ""}
-              onChange={(e) =>
-                updateEvaluationField(
-                  "coachRank",
-                  e.target.value ? Number(e.target.value) : null
-                )
-              }
-              style={inputStyle}
-            />
-          </div>
-
-          <div>
-            <label style={labelStyle}>Primary Position</label>
-            <select
-              value={evaluation.primaryPosition ?? ""}
-              onChange={(e) =>
-                updateEvaluationField(
-                  "primaryPosition",
-                  e.target.value ? (e.target.value as Position) : null
-                )
-              }
-              style={inputStyle}
-            >
-              <option value="">Not set</option>
-              {POSITIONS.map((position) => (
-                <option key={position} value={position}>
-                  {position}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label style={labelStyle}>Confidence</label>
-            <select
-              value={evaluation.confidence}
-              onChange={(e) =>
-                updateEvaluationField(
-                  "confidence",
-                  e.target.value as Confidence
-                )
-              }
-              style={inputStyle}
-            >
-              <option value="LOW">Low</option>
-              <option value="MEDIUM">Medium</option>
-              <option value="HIGH">High</option>
-            </select>
-          </div>
-
-          <div>
-            <label style={labelStyle}>Player Type</label>
-            <input
-              value={evaluation.playerType ?? ""}
-              onChange={(e) =>
-                updateEvaluationField(
-                  "playerType",
-                  e.target.value || null
-                )
-              }
-              placeholder="e.g. Two-way play driver"
-              style={inputStyle}
-            />
-          </div>
-        </div>
-
-        <div style={{ marginTop: 16 }}>
-          <label style={labelStyle}>Secondary Positions</label>
-
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            {POSITIONS.map((position) => (
-              <label key={position}>
-                <input
-                  type="checkbox"
-                  checked={evaluation.secondaryPositions.includes(position)}
-                  onChange={() => toggleSecondaryPosition(position)}
-                />{" "}
-                {position}
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <h3 style={{ marginTop: 22 }}>Skill Ratings</h3>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            gap: 12,
-          }}
-        >
-          {RATINGS.map(([field, label]) => (
-            <div key={field}>
-              <label style={labelStyle}>{label}</label>
-
-              <select
-                value={evaluation[field] ?? ""}
-                onChange={(e) =>
-                  updateEvaluationField(
-                    field,
-                    e.target.value ? Number(e.target.value) : null
-                  )
-                }
-                style={inputStyle}
-              >
-                <option value="">Not rated</option>
-                <option value="1">1 - Developing</option>
-                <option value="2">2</option>
-                <option value="3">3 - Average</option>
-                <option value="4">4</option>
-                <option value="5">5 - Strong</option>
-              </select>
-            </div>
-          ))}
-        </div>
-
-        <div style={{ marginTop: 18 }}>
-          <label style={labelStyle}>Strengths</label>
-          <textarea
-            value={evaluation.strengths ?? ""}
-            onChange={(e) =>
-              updateEvaluationField("strengths", e.target.value || null)
-            }
-            rows={3}
-            style={inputStyle}
-          />
-        </div>
-
-        <div style={{ marginTop: 12 }}>
-          <label style={labelStyle}>Development Priorities</label>
-          <textarea
-            value={evaluation.developmentPriorities ?? ""}
-            onChange={(e) =>
-              updateEvaluationField(
-                "developmentPriorities",
-                e.target.value || null
-              )
-            }
-            rows={3}
-            style={inputStyle}
-          />
-        </div>
-
-        <div style={{ marginTop: 12 }}>
-          <label style={labelStyle}>Coach Notes</label>
-          <textarea
-            value={evaluation.coachNotes ?? ""}
-            onChange={(e) =>
-              updateEvaluationField("coachNotes", e.target.value || null)
-            }
-            rows={3}
-            style={inputStyle}
-          />
-        </div>
-
-        <button
-          onClick={saveEvaluation}
-          disabled={!player.activeSeason}
-          style={{
-            ...buttonStyle,
-            marginTop: 14,
-            opacity: player.activeSeason ? 1 : 0.5,
-          }}
-        >
-          Save Evaluation
-        </button>
-      </section>
-
-      <section style={cardStyle}>
-        <h2 style={{ fontSize: 20, fontWeight: 800, marginTop: 0 }}>
-          Quick Observation
-        </h2>
-
-        <p style={{ marginTop: 0, opacity: 0.75 }}>
-          On mobile, tap the note field and use your phone keyboard's
-          microphone to dictate the observation.
+        <p className={styles.help}>
+          Use your phone microphone in the note field to dictate quickly.
         </p>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            gap: 12,
-          }}
-        >
-          <div>
-            <label style={labelStyle}>Source</label>
+        <div className={styles.grid}>
+          <div className={styles.field}>
+            <label className={styles.label}>Source</label>
             <select
+              className={styles.select}
               value={observationSource}
               onChange={(e) => setObservationSource(e.target.value)}
-              style={inputStyle}
             >
               <option value="GAME">Game</option>
               <option value="PRACTICE">Practice</option>
@@ -637,12 +377,12 @@ export default function PlayerCoachingPage() {
             </select>
           </div>
 
-          <div>
-            <label style={labelStyle}>Category</label>
+          <div className={styles.field}>
+            <label className={styles.label}>Category</label>
             <select
+              className={styles.select}
               value={observationCategory}
               onChange={(e) => setObservationCategory(e.target.value)}
-              style={inputStyle}
             >
               {OBSERVATION_CATEGORIES.map((category) => (
                 <option key={category} value={category}>
@@ -653,147 +393,292 @@ export default function PlayerCoachingPage() {
           </div>
         </div>
 
-        <div style={{ marginTop: 12 }}>
-          <label style={labelStyle}>Observation</label>
+        <div className={styles.field} style={{ marginTop: 12 }}>
+          <label className={styles.label}>Observation</label>
           <textarea
+            className={`${styles.textarea} ${styles.observationTextarea}`}
             value={observationNote}
             onChange={(e) => setObservationNote(e.target.value)}
-            rows={4}
-            placeholder="Example: Strong retrieval. Shoulder checked before reaching puck and used reverse when F1 took away wall."
-            style={inputStyle}
+            placeholder="What did you see?"
           />
         </div>
 
-        <button
-          onClick={addObservation}
-          style={{ ...buttonStyle, marginTop: 12 }}
-        >
-          Add Observation
+        <button className={styles.primaryButton} onClick={addObservation}>
+          Save Observation
         </button>
       </section>
 
-      <section style={cardStyle}>
-        <h2 style={{ fontSize: 20, fontWeight: 800, marginTop: 0 }}>
-          Observation History
-        </h2>
+      <details className={styles.details}>
+        <summary>Coaching Evaluation</summary>
 
-        {player.observations.length === 0 && (
-          <p style={{ opacity: 0.7 }}>No coaching observations yet.</p>
-        )}
-
-        {player.observations.map((observation) => (
-          <div
-            key={observation.id}
-            style={{
-              padding: "12px 0",
-              borderTop: "1px solid #eee",
-            }}
-          >
-            <div
-              style={{
-                fontWeight: 700,
-                display: "flex",
-                gap: 8,
-                flexWrap: "wrap",
-              }}
-            >
-              <span>{observation.category.replaceAll("_", " ")}</span>
-              <span style={{ opacity: 0.5 }}>•</span>
-              <span>{observation.source}</span>
-              <span style={{ opacity: 0.5 }}>•</span>
-              <span>
-                {new Date(observation.date).toLocaleDateString()}
-              </span>
+        <div className={styles.detailsContent}>
+          <div className={styles.grid}>
+            <div className={styles.field}>
+              <label className={styles.label}>Coach Rank</label>
+              <input
+                className={styles.input}
+                type="number"
+                min="1"
+                value={evaluation.coachRank ?? ""}
+                onChange={(e) =>
+                  updateEvaluationField(
+                    "coachRank",
+                    e.target.value ? Number(e.target.value) : null
+                  )
+                }
+              />
             </div>
 
-            {observation.game && (
-              <div style={{ marginTop: 3, opacity: 0.7 }}>
-                vs. {observation.game.opponent}
+            <div className={styles.field}>
+              <label className={styles.label}>Primary Position</label>
+              <select
+                className={styles.select}
+                value={evaluation.primaryPosition ?? ""}
+                onChange={(e) =>
+                  updateEvaluationField(
+                    "primaryPosition",
+                    e.target.value ? (e.target.value as Position) : null
+                  )
+                }
+              >
+                <option value="">Not set</option>
+                {POSITIONS.map((position) => (
+                  <option key={position}>{position}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className={styles.field}>
+              <label className={styles.label}>Confidence</label>
+              <select
+                className={styles.select}
+                value={evaluation.confidence}
+                onChange={(e) =>
+                  updateEvaluationField(
+                    "confidence",
+                    e.target.value as Confidence
+                  )
+                }
+              >
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
+              </select>
+            </div>
+
+            <div className={styles.field}>
+              <label className={styles.label}>Player Type</label>
+              <input
+                className={styles.input}
+                value={evaluation.playerType ?? ""}
+                onChange={(e) =>
+                  updateEvaluationField(
+                    "playerType",
+                    e.target.value || null
+                  )
+                }
+              />
+            </div>
+          </div>
+
+          <div style={{ marginTop: 16 }}>
+            <label className={styles.label}>Secondary Positions</label>
+            <div className={styles.secondaryPositions}>
+              {POSITIONS.map((position) => (
+                <label className={styles.checkbox} key={position}>
+                  <input
+                    type="checkbox"
+                    checked={evaluation.secondaryPositions.includes(position)}
+                    onChange={() => toggleSecondaryPosition(position)}
+                  />
+                  {position}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <h3>Skill Ratings</h3>
+
+          <div className={styles.ratingGrid}>
+            {RATINGS.map(([field, label]) => (
+              <div className={styles.field} key={field}>
+                <label className={styles.label}>{label}</label>
+                <select
+                  className={styles.select}
+                  value={evaluation[field] ?? ""}
+                  onChange={(e) =>
+                    updateEvaluationField(
+                      field,
+                      e.target.value ? Number(e.target.value) : null
+                    )
+                  }
+                >
+                  <option value="">Not rated</option>
+                  <option value="1">1 - Developing</option>
+                  <option value="2">2</option>
+                  <option value="3">3 - Average</option>
+                  <option value="4">4</option>
+                  <option value="5">5 - Strong</option>
+                </select>
               </div>
-            )}
-
-            <div style={{ marginTop: 6 }}>{observation.note}</div>
-          </div>
-        ))}
-      </section>
-
-      <section style={cardStyle}>
-        <h2 style={{ fontSize: 20, fontWeight: 800, marginTop: 0 }}>
-          Player Details
-        </h2>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            gap: 12,
-          }}
-        >
-          <div>
-            <label style={labelStyle}>Name</label>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              style={inputStyle}
-            />
+            ))}
           </div>
 
-          <div>
-            <label style={labelStyle}>Number</label>
-            <input
-              value={number}
-              onChange={(e) => setNumber(e.target.value)}
-              style={inputStyle}
-            />
-          </div>
-
-          <div>
-            <label style={labelStyle}>Shoot Side</label>
-            <select
-              value={shootSide}
+          <div className={styles.field} style={{ marginTop: 16 }}>
+            <label className={styles.label}>Strengths</label>
+            <textarea
+              className={styles.textarea}
+              value={evaluation.strengths ?? ""}
               onChange={(e) =>
-                setShootSide(
-                  e.target.value as "" | "LEFT" | "RIGHT"
+                updateEvaluationField(
+                  "strengths",
+                  e.target.value || null
                 )
               }
-              style={inputStyle}
-            >
-              <option value="">Not set</option>
-              <option value="LEFT">Left</option>
-              <option value="RIGHT">Right</option>
-            </select>
-          </div>
-
-          <div>
-            <label style={labelStyle}>Parents Names</label>
-            <input
-              value={parentsName}
-              onChange={(e) => setParentsName(e.target.value)}
-              style={inputStyle}
             />
           </div>
-        </div>
 
-        <div
-          style={{
-            display: "flex",
-            gap: 10,
-            marginTop: 14,
-            flexWrap: "wrap",
-          }}
-        >
-          <button onClick={savePlayerDetails} style={buttonStyle}>
-            Save Player Details
-          </button>
+          <div className={styles.field} style={{ marginTop: 12 }}>
+            <label className={styles.label}>Development Priorities</label>
+            <textarea
+              className={styles.textarea}
+              value={evaluation.developmentPriorities ?? ""}
+              onChange={(e) =>
+                updateEvaluationField(
+                  "developmentPriorities",
+                  e.target.value || null
+                )
+              }
+            />
+          </div>
+
+          <div className={styles.field} style={{ marginTop: 12 }}>
+            <label className={styles.label}>Coach Notes</label>
+            <textarea
+              className={styles.textarea}
+              value={evaluation.coachNotes ?? ""}
+              onChange={(e) =>
+                updateEvaluationField(
+                  "coachNotes",
+                  e.target.value || null
+                )
+              }
+            />
+          </div>
 
           <button
-            onClick={removePlayer}
-            style={{ ...buttonStyle, fontWeight: 400 }}
+            className={styles.primaryButton}
+            onClick={saveEvaluation}
+            disabled={!player.activeSeason}
           >
-            Delete Player
+            Save Evaluation
           </button>
         </div>
-      </section>
+      </details>
+
+      <details className={styles.details}>
+        <summary>
+          Observation History ({player.observations.length})
+        </summary>
+
+        <div className={styles.detailsContent}>
+          {player.observations.length === 0 && (
+            <p>No coaching observations yet.</p>
+          )}
+
+          {player.observations.map((observation) => (
+            <div className={styles.observation} key={observation.id}>
+              <div className={styles.observationMeta}>
+                <span>{observation.category.replaceAll("_", " ")}</span>
+                <span>•</span>
+                <span>{observation.source}</span>
+                <span>•</span>
+                <span>
+                  {new Date(observation.date).toLocaleDateString()}
+                </span>
+              </div>
+
+              {observation.game && (
+                <div className={styles.game}>
+                  vs. {observation.game.opponent}
+                </div>
+              )}
+
+              <div className={styles.observationNote}>
+                {observation.note}
+              </div>
+            </div>
+          ))}
+        </div>
+      </details>
+
+      <details className={styles.details}>
+        <summary>Player Details</summary>
+
+        <div className={styles.detailsContent}>
+          <div className={styles.grid}>
+            <div className={styles.field}>
+              <label className={styles.label}>Name</label>
+              <input
+                className={styles.input}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+
+            <div className={styles.field}>
+              <label className={styles.label}>Number</label>
+              <input
+                className={styles.input}
+                value={number}
+                onChange={(e) => setNumber(e.target.value)}
+              />
+            </div>
+
+            <div className={styles.field}>
+              <label className={styles.label}>Shoot Side</label>
+              <select
+                className={styles.select}
+                value={shootSide}
+                onChange={(e) =>
+                  setShootSide(
+                    e.target.value as "" | "LEFT" | "RIGHT"
+                  )
+                }
+              >
+                <option value="">Not set</option>
+                <option value="LEFT">Left</option>
+                <option value="RIGHT">Right</option>
+              </select>
+            </div>
+
+            <div className={styles.field}>
+              <label className={styles.label}>Parents Names</label>
+              <input
+                className={styles.input}
+                value={parentsName}
+                onChange={(e) => setParentsName(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className={styles.actions}>
+            <button
+              className={styles.button}
+              onClick={savePlayerDetails}
+            >
+              Save Player Details
+            </button>
+
+            <button
+              className={styles.button}
+              onClick={removePlayer}
+            >
+              Delete Player
+            </button>
+          </div>
+        </div>
+      </details>
     </main>
   );
 }
