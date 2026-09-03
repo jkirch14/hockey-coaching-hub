@@ -7,6 +7,21 @@ import styles from "../Games.module.css";
 
 type Player = { id: string; name: string; number: number | null };
 
+type GameLineupEntry = {
+  id: string;
+  position: "C" | "LW" | "RW" | "LD" | "RD" | "G" | "OTHER";
+  line: number | null;
+  goals: number;
+  assists: number;
+  penalties: number;
+  shutout: boolean;
+  player: {
+    id: string;
+    name: string;
+    number: number | null;
+  };
+};
+
 type Game = {
   id: string;
   date: string;
@@ -20,7 +35,163 @@ type Game = {
   jerseyColor: string | null;
   notes: string | null;
   playerOfGameId: string | null;
+  lineupEntries: GameLineupEntry[];
 };
+
+function LineupSummary({ entries }: { entries: GameLineupEntry[] }) {
+  if (!entries.length) {
+    return (
+      <section className={styles.lineupSummary}>
+        <div className={styles.lineupSummaryHeader}>
+          <h2>Lineup</h2>
+        </div>
+
+        <div className={styles.emptyLineup}>
+          No lineup saved for this game yet.
+        </div>
+      </section>
+    );
+  }
+
+  const positionOrder: Record<string, number> = {
+    LW: 1,
+    C: 2,
+    RW: 3,
+    LD: 1,
+    RD: 2,
+    G: 1,
+    OTHER: 9,
+  };
+
+  const forwards = entries.filter((entry) =>
+    ["LW", "C", "RW"].includes(entry.position)
+  );
+
+  const defense = entries.filter((entry) =>
+    ["LD", "RD"].includes(entry.position)
+  );
+
+  const goalies = entries.filter((entry) => entry.position === "G");
+
+  const other = entries.filter(
+    (entry) =>
+      !["LW", "C", "RW", "LD", "RD", "G"].includes(entry.position)
+  );
+
+  function lineNumbers(items: GameLineupEntry[]) {
+    return Array.from(
+      new Set(
+        items
+          .map((entry) => entry.line)
+          .filter((line): line is number => line !== null)
+      )
+    ).sort((a, b) => a - b);
+  }
+
+  function playerChip(entry: GameLineupEntry) {
+    return (
+      <div key={entry.id} className={styles.lineupPlayer}>
+        <div className={styles.lineupPosition}>{entry.position}</div>
+        <div className={styles.lineupPlayerName}>
+          {entry.player.number !== null ? `#${entry.player.number} ` : ""}
+          {entry.player.name}
+        </div>
+      </div>
+    );
+  }
+
+  function groupedCards(
+    title: string,
+    items: GameLineupEntry[],
+    groupLabel: string
+  ) {
+    const numbers = lineNumbers(items);
+    const unassigned = items.filter((entry) => entry.line === null);
+
+    if (!items.length) return null;
+
+    return (
+      <div className={styles.lineupGroup}>
+        <h3 className={styles.lineupGroupTitle}>{title}</h3>
+
+        <div className={styles.lineupCards}>
+          {numbers.map((line) => {
+            const players = items
+              .filter((entry) => entry.line === line)
+              .sort(
+                (a, b) =>
+                  (positionOrder[a.position] ?? 99) -
+                  (positionOrder[b.position] ?? 99)
+              );
+
+            return (
+              <div key={`${title}-${line}`} className={styles.lineupCard}>
+                <div className={styles.lineupCardTitle}>
+                  {groupLabel} {line}
+                </div>
+
+                <div className={styles.lineupPlayers}>
+                  {players.map(playerChip)}
+                </div>
+              </div>
+            );
+          })}
+
+          {unassigned.length > 0 && (
+            <div className={styles.lineupCard}>
+              <div className={styles.lineupCardTitle}>Unassigned</div>
+              <div className={styles.lineupPlayers}>
+                {unassigned
+                  .sort(
+                    (a, b) =>
+                      (positionOrder[a.position] ?? 99) -
+                      (positionOrder[b.position] ?? 99)
+                  )
+                  .map(playerChip)}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <section className={styles.lineupSummary}>
+      <div className={styles.lineupSummaryHeader}>
+        <h2>Lineup</h2>
+        <span>{entries.length} players</span>
+      </div>
+
+      {groupedCards("Forwards", forwards, "Line")}
+      {groupedCards("Defense", defense, "Pair")}
+
+      {goalies.length > 0 && (
+        <div className={styles.lineupGroup}>
+          <h3 className={styles.lineupGroupTitle}>Goalie</h3>
+
+          <div className={styles.lineupCard}>
+            <div className={styles.lineupPlayers}>
+              {goalies.map(playerChip)}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {other.length > 0 && (
+        <div className={styles.lineupGroup}>
+          <h3 className={styles.lineupGroupTitle}>Other</h3>
+
+          <div className={styles.lineupCard}>
+            <div className={styles.lineupPlayers}>
+              {other.map(playerChip)}
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
 
 function toLocalInputValue(iso: string) {
   const d = new Date(iso);
@@ -324,6 +495,8 @@ export default function GameEditPage() {
           />
         </div>
 
+        <LineupSummary entries={game.lineupEntries ?? []} />
+
         <div className={styles.actions}>
           <button
             className={styles.button}
@@ -354,6 +527,8 @@ export default function GameEditPage() {
     </main>
   );
 }
+
+
 
 
 

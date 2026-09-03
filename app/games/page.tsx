@@ -351,9 +351,7 @@ export default function GamesPage() {
               <div>
                 {g.status === "FINAL"
                   ? `${g.goalsFor}-${g.goalsAgainst}`
-                  : g.status === "CANCELLED"
-                    ? "Cancelled"
-                    : "Scheduled"}
+                  : "—"}
               </div>
               <div>
                 <Link href={`/games/${g.id}`}>Edit</Link>
@@ -412,6 +410,7 @@ export default function GamesPage() {
     </main>
   );
 }
+
 
 
 
