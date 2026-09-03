@@ -227,3 +227,29 @@ a {
     font-size: 12px;
   }
 }
+
+.app-toast {
+  position: fixed;
+  left: 50%;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: calc(100% - 32px);
+  max-width: 480px;
+  padding: 13px 16px;
+  border-radius: 12px;
+  background: #171717;
+  color: white;
+  font-weight: 800;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.22);
+}
+
+.app-toast-error {
+  background: #7f1d1d;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

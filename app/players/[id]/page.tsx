@@ -354,7 +354,11 @@ export default function PlayerCoachingPage() {
         </div>
       </header>
 
-      {status && <div className={styles.status}>{status}</div>}
+      {status && (
+        <div className={`app-toast ${status.startsWith("Error") ? "app-toast-error" : ""}`}>
+          {status}
+        </div>
+      )}
 
       <section className={styles.primaryCard}>
         <h2 className={styles.sectionTitle}>Quick Observation</h2>
@@ -403,8 +407,12 @@ export default function PlayerCoachingPage() {
           />
         </div>
 
-        <button className={styles.primaryButton} onClick={addObservation}>
-          Save Observation
+        <button
+          className={styles.primaryButton}
+          onClick={addObservation}
+          disabled={status === "Saving observation..."}
+        >
+          {status === "Saving observation..." ? "Saving..." : "Save Observation"}
         </button>
       </section>
 
@@ -569,9 +577,9 @@ export default function PlayerCoachingPage() {
           <button
             className={styles.primaryButton}
             onClick={saveEvaluation}
-            disabled={!player.activeSeason}
+            disabled={!player.activeSeason || status === "Saving evaluation..."}
           >
-            Save Evaluation
+            {status === "Saving evaluation..." ? "Saving..." : "Save Evaluation"}
           </button>
         </div>
       </details>
@@ -666,8 +674,9 @@ export default function PlayerCoachingPage() {
             <button
               className={styles.button}
               onClick={savePlayerDetails}
+              disabled={status === "Saving player details..."}
             >
-              Save Player Details
+              {status === "Saving player details..." ? "Saving..." : "Save Player Details"}
             </button>
 
             <button
@@ -682,3 +691,7 @@ export default function PlayerCoachingPage() {
     </main>
   );
 }
+
+
+
+
