@@ -1,0 +1,164 @@
+﻿.page {
+  width: 100%;
+  min-width: 0;
+  max-width: 1100px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 850;
+}
+
+.nav {
+  display: flex;
+  gap: 12px;
+}
+
+.summary {
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+.saveBar {
+  margin-top: 14px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.saveButton {
+  min-height: 48px;
+  padding: 10px 16px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background: white;
+  font-weight: 850;
+}
+
+.desktopTable {
+  margin-top: 12px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.desktopRow {
+  display: grid;
+  grid-template-columns: 50px 60px minmax(140px, 1fr) 110px 70px 60px 60px 60px 50px;
+  gap: 6px;
+  padding: 10px;
+  align-items: center;
+}
+
+.desktopHeader {
+  background: #f7f7f7;
+  font-weight: 800;
+}
+
+.desktopPlayer {
+  border-top: 1px solid #eee;
+}
+
+.control {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 7px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: white;
+}
+
+.mobileCards {
+  display: none;
+}
+
+.playerCard {
+  padding: 14px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background: white;
+}
+
+.playerTop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.playerName {
+  flex: 1;
+  min-width: 0;
+  font-size: 17px;
+  font-weight: 850;
+}
+
+.number {
+  opacity: .65;
+  font-weight: 800;
+}
+
+.cardGrid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.statsGrid {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .header {
+    display: block;
+  }
+
+  .title {
+    font-size: 25px;
+  }
+
+  .nav {
+    display: none;
+  }
+
+  .saveBar {
+    display: block;
+  }
+
+  .saveButton {
+    width: 100%;
+  }
+
+  .saveBar span {
+    display: block;
+    margin-top: 8px;
+  }
+
+  .desktopTable {
+    display: none;
+  }
+
+  .mobileCards {
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+  }
+}

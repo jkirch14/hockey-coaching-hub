@@ -1,0 +1,217 @@
+﻿.page {
+  width: 100%;
+  min-width: 0;
+}
+
+.pageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 850;
+}
+
+.localNav {
+  display: flex;
+  gap: 12px;
+}
+
+.localNav a {
+  font-weight: 700;
+}
+
+.card {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 14px;
+  background: white;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px 160px;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.field {
+  min-width: 0;
+}
+
+.label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.input,
+.select {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background: white;
+  font-size: 16px;
+}
+
+.parents {
+  margin-top: 12px;
+}
+
+.addButton {
+  min-height: 46px;
+  margin-top: 14px;
+  padding: 10px 16px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background: white;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.status {
+  margin: 12px 0 0;
+}
+
+.rosterSection {
+  margin-top: 20px;
+}
+
+.rosterTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.desktopRoster {
+  margin-top: 10px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
+}
+
+.desktopRow {
+  display: grid;
+  grid-template-columns: 70px minmax(150px, 1fr) 100px minmax(160px, 1fr) 90px;
+  align-items: center;
+  padding: 12px;
+}
+
+.desktopHeader {
+  font-weight: 800;
+  background: #f7f7f7;
+}
+
+.desktopPlayer {
+  border-top: 1px solid #eee;
+}
+
+.mobileRoster {
+  display: none;
+}
+
+.playerCard {
+  display: block;
+  padding: 14px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background: white;
+  color: inherit;
+  text-decoration: none;
+}
+
+.playerCardTop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.number {
+  flex: 0 0 auto;
+  min-width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: #f2f2f2;
+  font-weight: 900;
+}
+
+.playerInfo {
+  min-width: 0;
+  flex: 1;
+}
+
+.playerName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.playerMeta {
+  margin-top: 3px;
+  font-size: 13px;
+  opacity: 0.65;
+}
+
+.chevron {
+  font-size: 24px;
+  opacity: 0.45;
+}
+
+@media (max-width: 640px) {
+  .pageHeader {
+    display: block;
+  }
+
+  .localNav {
+    display: none;
+  }
+
+  .title {
+    font-size: 26px;
+  }
+
+  .card {
+    padding: 14px;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .addButton {
+    width: 100%;
+    min-height: 50px;
+  }
+
+  .desktopRoster {
+    display: none;
+  }
+
+  .mobileRoster {
+    display: grid;
+    gap: 8px;
+    margin-top: 10px;
+  }
+}

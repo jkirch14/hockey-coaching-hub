@@ -1,7 +1,8 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import styles from "./Dashboard.module.css";
 
 type BootstrapResult =
   | { teamId: string; created: boolean; role: string; teamName: string }
@@ -89,7 +90,7 @@ function LineChartGFGA({
       {points.map((p: any, i) => (
   <g key={i}>
     <title>
-      {`${p.xLabel} vs ${p.opponent}${p.league ? ` • ${p.league}` : ""}\nGF ${p.gf} • GA ${p.ga} • ${p.result}`}
+      {`${p.xLabel} vs ${p.opponent}${p.league ? ` â€¢ ${p.league}` : ""}\nGF ${p.gf} â€¢ GA ${p.ga} â€¢ ${p.result}`}
     </title>
     <circle cx={x(i)} cy={y(p.gf)} r="3" fill="black" />
     <circle cx={x(i)} cy={y(p.ga)} r="3" fill="black" opacity="0.75" />
@@ -170,7 +171,7 @@ function CumulativeGDChart({
         return (
           <g key={i}>
             <title>
-              {`${p.xLabel} vs ${p.opponent}${p.league ? ` • ${p.league}` : ""}\nGame GD ${perGame} • Cum GD ${v} • ${p.result}`}
+              {`${p.xLabel} vs ${p.opponent}${p.league ? ` â€¢ ${p.league}` : ""}\nGame GD ${perGame} â€¢ Cum GD ${v} â€¢ ${p.result}`}
             </title>
             <circle cx={x(i)} cy={y(v)} r="3" fill="black" />
           </g>
@@ -179,7 +180,7 @@ function CumulativeGDChart({
 
 
       <text x={pad} y={pad - 2} fontSize="12" fill="#555" fontWeight="700">
-        Cumulative Goal Differential (running GF − GA)
+        Cumulative Goal Differential (running GF âˆ’ GA)
       </text>
 
       {/* x labels: first/mid/last */}
@@ -329,7 +330,7 @@ function LeagueBars({
             </div>
 
             <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7 }}>
-              Wins (dark) • Ties (mid) • Losses (light)
+              Wins (dark) â€¢ Ties (mid) â€¢ Losses (light)
             </div>
           </div>
         );
@@ -364,7 +365,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     (async () => {
-      setMsg("Setting up your team…");
+      setMsg("Setting up your teamâ€¦");
       const res = await fetch("/api/bootstrap", { method: "POST" });
       const json = (await res.json()) as BootstrapResult;
       setBoot(json);
@@ -382,7 +383,7 @@ export default function DashboardPage() {
     if (!teamId) return;
 
     (async () => {
-      setMsg("Loading stats…");
+      setMsg("Loading statsâ€¦");
       const [tRes, pRes, trRes] = await Promise.all([
         fetch(`/api/stats/team?teamId=${encodeURIComponent(teamId)}`),
         fetch(`/api/stats/players?teamId=${encodeURIComponent(teamId)}`),
@@ -429,25 +430,25 @@ export default function DashboardPage() {
     })();
   }, [teamId]);
 
-  const record = teamStats ? `${teamStats.totals.wins}-${teamStats.totals.losses}-${teamStats.totals.ties}` : "—";
-  const gfga = teamStats ? `${teamStats.totals.goalsFor} / ${teamStats.totals.goalsAgainst}` : "—";
-  const gd = teamStats ? `${teamStats.totals.goalDiff}` : "—";
+  const record = teamStats ? `${teamStats.totals.wins}-${teamStats.totals.losses}-${teamStats.totals.ties}` : "â€”";
+  const gfga = teamStats ? `${teamStats.totals.goalsFor} / ${teamStats.totals.goalsAgainst}` : "â€”";
+  const gd = teamStats ? `${teamStats.totals.goalDiff}` : "â€”";
 
   return (
-    <main style={{ padding: 24, fontFamily: "system-ui, sans-serif", maxWidth: 1100 }}>
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+    <main className={styles.page}>
+      <header className={styles.pageHeader}>
         <div>
-          <h1 style={{ fontSize: 30, fontWeight: 900, margin: 0 }}>
-            Dashboard{boot && !("error" in boot) ? ` • ${boot.teamName}` : ""}
+          <h1 className={styles.title}>
+            Dashboard{boot && !("error" in boot) ? ` â€¢ ${boot.teamName}` : ""}
           </h1>
           {boot && !("error" in boot) ? (
             <div style={{ marginTop: 6, fontSize: 12, opacity: 0.7 }}>
-              Role: <b>{boot.role}</b> • Team ID: <code>{boot.teamId}</code>
+              Role: <b>{boot.role}</b> â€¢ Team ID: <code>{boot.teamId}</code>
             </div>
           ) : null}
         </div>
 
-        <nav style={{ display: "flex", gap: 12 }}>
+        <nav className={styles.localNav}>
           <Link href="/players">Players</Link>
           <Link href="/games">Games</Link>
           <Link href="/stats/players">Player Stats</Link>
@@ -457,14 +458,14 @@ export default function DashboardPage() {
 
       {msg ? <p style={{ marginTop: 12 }}>{msg}</p> : null}
 
-      <section style={{ marginTop: 16, display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+      <section className={styles.statsGrid}>
         <Card title="Record" value={record} sub={teamStats ? `${teamStats.totals.games} games` : ""} />
         <Card title="Goals For / Against" value={gfga} sub={teamStats ? `GD: ${gd}` : ""} />
-        <Card title="Penalties" value={teamStats ? String(teamStats.totals.penalties) : "—"} />
-        <Card title="Shutouts" value={teamStats ? String(teamStats.totals.shutouts) : "—"} />
+        <Card title="Penalties" value={teamStats ? String(teamStats.totals.penalties) : "â€”"} />
+        <Card title="Shutouts" value={teamStats ? String(teamStats.totals.shutouts) : "â€”"} />
       </section>
 
-      <section style={{ marginTop: 18, display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 12 }}>
+      <section className={styles.splitGrid}>
         <div style={{ border: "1px solid #ddd", borderRadius: 14, padding: 14 }}>
           <h2 style={{ margin: 0, fontSize: 16, fontWeight: 900 }}>League breakdown</h2>
 
@@ -472,13 +473,7 @@ export default function DashboardPage() {
             {(teamStats?.leagues ?? []).map((l) => (
               <div
                 key={l.league}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 140px 100px",
-                  padding: "10px 0",
-                  borderBottom: "1px solid #f1f1f1",
-                  alignItems: "baseline",
-                }}
+                className={styles.leagueRow}
               >
                 <div style={{ fontWeight: 800 }}>{l.league}</div>
                 <div style={{ opacity: 0.85 }}>
@@ -498,13 +493,7 @@ export default function DashboardPage() {
             {playerRows.map((p) => (
               <div
                 key={p.id}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "60px 1fr 70px 70px 70px",
-                  padding: "10px 0",
-                  borderBottom: "1px solid #f1f1f1",
-                  alignItems: "baseline",
-                }}
+                className={styles.scorerRow}
               >
                 <div style={{ opacity: 0.8 }}>{p.number ?? ""}</div>
                 <div style={{ fontWeight: 800 }}>{p.name}</div>
@@ -521,7 +510,7 @@ export default function DashboardPage() {
           </div>
         </div>
       </section>
-      <section style={{ marginTop: 18, display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: 12 }}>
+      <section className={styles.chartGrid}>
 <div style={{ border: "1px solid #ddd", borderRadius: 14, padding: 14, background: "white" }}>
   <h2 style={{ margin: 0, fontSize: 16, fontWeight: 900 }}>Goals trend</h2>
   <div style={{ marginTop: 10 }}>
@@ -549,3 +538,4 @@ export default function DashboardPage() {
     </main>
   );
 }
+

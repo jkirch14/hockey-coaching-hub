@@ -1,7 +1,8 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import styles from "./PlayersPage.module.css";
 
 type Player = {
   id: string;
@@ -16,29 +17,35 @@ export default function PlayersPage() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [status, setStatus] = useState("");
 
-  // form
   const [name, setName] = useState("");
-  const [number, setNumber] = useState<string>("");
-  const [shootSide, setShootSide] = useState<"" | "LEFT" | "RIGHT">("");
+  const [number, setNumber] = useState("");
+  const [shootSide, setShootSide] =
+    useState<"" | "LEFT" | "RIGHT">("");
   const [parentsName, setParentsName] = useState("");
 
   useEffect(() => {
-    const stored = localStorage.getItem("teamId") ?? "";
-    setTeamId(stored);
+    setTeamId(localStorage.getItem("teamId") ?? "");
   }, []);
 
   async function load() {
     if (!teamId) {
-      setStatus("Missing teamId. Visit /dashboard first.");
+      setStatus("Missing teamId. Visit the dashboard first.");
       return;
     }
+
     setStatus("Loading players...");
-    const res = await fetch(`/api/players?teamId=${encodeURIComponent(teamId)}`);
+
+    const res = await fetch(
+      `/api/players?teamId=${encodeURIComponent(teamId)}`
+    );
+
     const json = await res.json();
+
     if (!res.ok) {
       setStatus(`Error: ${json.error ?? "UNKNOWN"}`);
       return;
     }
+
     setPlayers(json);
     setStatus("");
   }
@@ -51,25 +58,49 @@ export default function PlayersPage() {
   async function addPlayer() {
     setStatus("");
 
-    if (!teamId) return setStatus("Missing teamId. Visit /dashboard first.");
-    if (!name.trim()) return setStatus("Name is required.");
+    if (!teamId) {
+      setStatus("Missing teamId. Visit the dashboard first.");
+      return;
+    }
 
-    const payload: any = {
+    if (!name.trim()) {
+      setStatus("Name is required.");
+      return;
+    }
+
+    const payload: {
+      teamId: string;
+      name: string;
+      parentsName?: string;
+      shootSide?: "LEFT" | "RIGHT";
+      number?: number;
+    } = {
       teamId,
       name: name.trim(),
-      parentsName: parentsName.trim() || undefined,
-      shootSide: shootSide || undefined,
     };
 
-    if (number.trim()) payload.number = Number(number);
+    if (parentsName.trim()) {
+      payload.parentsName = parentsName.trim();
+    }
+
+    if (shootSide) {
+      payload.shootSide = shootSide;
+    }
+
+    if (number.trim()) {
+      payload.number = Number(number);
+    }
 
     setStatus("Adding player...");
+
     const res = await fetch("/api/players", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
+
     const json = await res.json();
+
     if (!res.ok) {
       setStatus(`Error: ${json.error ?? "UNKNOWN"}`);
       return;
@@ -79,105 +110,150 @@ export default function PlayersPage() {
     setNumber("");
     setShootSide("");
     setParentsName("");
+
     await load();
-    setStatus("✅ Player added.");
+    setStatus("Player added.");
   }
 
   return (
-    <main style={{ padding: 24, fontFamily: "system-ui, sans-serif", maxWidth: 900 }}>
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-        <h1 style={{ fontSize: 28, fontWeight: 700 }}>Players</h1>
-        <nav style={{ display: "flex", gap: 12 }}>
+    <main className={styles.page}>
+      <header className={styles.pageHeader}>
+        <h1 className={styles.title}>Players</h1>
+
+        <nav className={styles.localNav}>
           <Link href="/dashboard">Dashboard</Link>
           <Link href="/admin/sharing">Sharing</Link>
         </nav>
       </header>
 
-      <section style={{ marginTop: 16, padding: 16, border: "1px solid #ddd", borderRadius: 12 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700 }}>Add player</h2>
+      <details className={styles.card}>
+        <summary className={styles.cardTitle}>Add player</summary>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 140px 160px", gap: 12, marginTop: 10 }}>
-          <div>
-            <label style={{ display: "block", fontWeight: 600, marginBottom: 6 }}>Name</label>
+        <div className={styles.formGrid}>
+          <div className={styles.field}>
+            <label className={styles.label}>Name</label>
             <input
+              className={styles.input}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              style={{ width: "100%", padding: 10, borderRadius: 10, border: "1px solid #ccc" }}
               placeholder="Player name"
             />
           </div>
 
-          <div>
-            <label style={{ display: "block", fontWeight: 600, marginBottom: 6 }}>Number</label>
+          <div className={styles.field}>
+            <label className={styles.label}>Number</label>
             <input
+              className={styles.input}
+              inputMode="numeric"
               value={number}
               onChange={(e) => setNumber(e.target.value)}
-              style={{ width: "100%", padding: 10, borderRadius: 10, border: "1px solid #ccc" }}
-              placeholder="e.g. 12"
+              placeholder="12"
             />
           </div>
 
-          <div>
-            <label style={{ display: "block", fontWeight: 600, marginBottom: 6 }}>Shoot side</label>
+          <div className={styles.field}>
+            <label className={styles.label}>Shoot side</label>
             <select
+              className={styles.select}
               value={shootSide}
-              onChange={(e) => setShootSide(e.target.value as any)}
-              style={{ width: "100%", padding: 10, borderRadius: 10, border: "1px solid #ccc" }}
+              onChange={(e) =>
+                setShootSide(
+                  e.target.value as "" | "LEFT" | "RIGHT"
+                )
+              }
             >
-              <option value="">(not set)</option>
+              <option value="">Not set</option>
               <option value="LEFT">Left</option>
               <option value="RIGHT">Right</option>
             </select>
           </div>
         </div>
 
-        <div style={{ marginTop: 12 }}>
-          <label style={{ display: "block", fontWeight: 600, marginBottom: 6 }}>Parents names</label>
+        <div className={`${styles.field} ${styles.parents}`}>
+          <label className={styles.label}>Parents names</label>
           <input
+            className={styles.input}
             value={parentsName}
             onChange={(e) => setParentsName(e.target.value)}
-            style={{ width: "100%", padding: 10, borderRadius: 10, border: "1px solid #ccc" }}
             placeholder="Optional"
           />
         </div>
 
-        <button
-          onClick={addPlayer}
-          style={{ marginTop: 14, padding: "10px 14px", borderRadius: 10, border: "1px solid #ccc", cursor: "pointer", fontWeight: 700 }}
-        >
+        <button className={styles.addButton} onClick={addPlayer}>
           Add Player
         </button>
+      </details>
 
-        {status && <p style={{ marginTop: 10 }}>{status}</p>}
-      </section>
+      {status && <p className={styles.status}>{status}</p>}
 
-      <section style={{ marginTop: 16 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700 }}>Roster</h2>
+      <section className={styles.rosterSection}>
+        <h2 className={styles.rosterTitle}>
+          Roster ({players.length})
+        </h2>
 
-        <div style={{ marginTop: 10, border: "1px solid #ddd", borderRadius: 12, overflow: "hidden" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "100px 1fr 140px 1fr 120px", gap: 0, fontWeight: 700, padding: 12, background: "#f7f7f7" }}>
+        <div className={styles.desktopRoster}>
+          <div
+            className={`${styles.desktopRow} ${styles.desktopHeader}`}
+          >
             <div>#</div>
             <div>Name</div>
             <div>Shoots</div>
             <div>Parents</div>
-            <div></div>
+            <div />
           </div>
 
           {players.map((p) => (
-            <div key={p.id} style={{ display: "grid", gridTemplateColumns: "100px 1fr 140px 1fr 120px", padding: 12, borderTop: "1px solid #eee" }}>
+            <div
+              key={p.id}
+              className={`${styles.desktopRow} ${styles.desktopPlayer}`}
+            >
               <div>{p.number ?? ""}</div>
               <div>{p.name}</div>
               <div>{p.shootSide ?? ""}</div>
-              <div style={{ opacity: 0.9 }}>{p.parentsName ?? ""}</div>
+              <div>{p.parentsName ?? ""}</div>
               <div>
-                <Link href={`/players/${p.id}`} style={{ fontWeight: 700 }}>
-                  Edit
+                <Link href={`/players/${p.id}`}>
+                  Coaching
                 </Link>
               </div>
             </div>
           ))}
+        </div>
 
-          {players.length === 0 && <div style={{ padding: 12 }}>No players yet.</div>}
+        <div className={styles.mobileRoster}>
+          {players.map((p) => (
+            <Link
+              key={p.id}
+              href={`/players/${p.id}`}
+              className={styles.playerCard}
+            >
+              <div className={styles.playerCardTop}>
+                <div className={styles.number}>
+                  {p.number ?? "—"}
+                </div>
+
+                <div className={styles.playerInfo}>
+                  <div className={styles.playerName}>
+                    {p.name}
+                  </div>
+
+                  <div className={styles.playerMeta}>
+                    {p.shootSide
+                      ? `Shoots ${p.shootSide.toLowerCase()}`
+                      : "Open coaching profile"}
+                  </div>
+                </div>
+
+                <div className={styles.chevron}>›</div>
+              </div>
+            </Link>
+          ))}
+
+          {players.length === 0 && (
+            <div className={styles.playerCard}>
+              No players yet.
+            </div>
+          )}
         </div>
       </section>
     </main>

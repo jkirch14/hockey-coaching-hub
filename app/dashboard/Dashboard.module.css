@@ -1,0 +1,138 @@
+﻿.page {
+  width: 100%;
+  min-width: 0;
+  max-width: 1100px;
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.title {
+  margin: 0;
+  font-size: 30px;
+  line-height: 1.15;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.localNav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.localNav a {
+  font-weight: 700;
+}
+
+.statsGrid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.splitGrid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 12px;
+}
+
+.chartGrid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  gap: 12px;
+}
+
+.splitGrid > *,
+.chartGrid > *,
+.statsGrid > * {
+  min-width: 0;
+}
+
+.leagueRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 140px 100px;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f1f1;
+  align-items: baseline;
+}
+
+.scorerRow {
+  display: grid;
+  grid-template-columns: 50px minmax(120px, 1fr) 55px 55px 55px;
+  gap: 4px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f1f1;
+  align-items: baseline;
+}
+
+.chartWrap {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.wltWrap {
+  width: 100%;
+  min-width: 0;
+  margin-top: 12px;
+  overflow: hidden;
+}
+
+@media (max-width: 760px) {
+  .pageHeader {
+    display: block;
+  }
+
+  .title {
+    font-size: 25px;
+  }
+
+  .localNav {
+    display: none;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .splitGrid,
+  .chartGrid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .leagueRow {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .leagueRow > :nth-child(3) {
+    display: none;
+  }
+
+  .scorerRow {
+    grid-template-columns: 40px minmax(0, 1fr) 42px 42px 48px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 390px) {
+  .statsGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .scorerRow {
+    grid-template-columns: 34px minmax(0, 1fr) 34px 34px 42px;
+    gap: 2px;
+    font-size: 12px;
+  }
+}

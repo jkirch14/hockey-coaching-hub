@@ -1,9 +1,11 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import styles from "./Games.module.css";
 
 type Player = { id: string; name: string; number: number | null };
+
 type Game = {
   id: string;
   date: string;
@@ -20,7 +22,6 @@ type Game = {
 };
 
 function toLocalInputValue(d: Date) {
-  // YYYY-MM-DDTHH:mm for <input type="datetime-local">
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
@@ -31,7 +32,6 @@ export default function GamesPage() {
   const [games, setGames] = useState<Game[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
 
-  // form
   const [date, setDate] = useState(toLocalInputValue(new Date()));
   const [location, setLocation] = useState("");
   const [opponent, setOpponent] = useState("");
@@ -39,7 +39,7 @@ export default function GamesPage() {
   const [result, setResult] = useState<"WIN" | "LOSS" | "TIE">("WIN");
   const [goalsFor, setGoalsFor] = useState("0");
   const [goalsAgainst, setGoalsAgainst] = useState("0");
-  const [playerOfGameId, setPlayerOfGameId] = useState<string>("");
+  const [playerOfGameId, setPlayerOfGameId] = useState("");
   const [jerseyColor, setJerseyColor] = useState("");
   const [notes, setNotes] = useState("");
 
@@ -54,24 +54,37 @@ export default function GamesPage() {
   }
 
   async function loadGames() {
-    if (!teamId) return setStatus("Missing teamId. Visit /dashboard first.");
+    if (!teamId) {
+      setStatus("Missing teamId. Visit the dashboard first.");
+      return;
+    }
+
     setStatus("Loading games...");
+
     const res = await fetch(`/api/games?teamId=${encodeURIComponent(teamId)}`);
     const json = await res.json();
-    if (!res.ok) return setStatus(`Error: ${json.error ?? "UNKNOWN"}`);
+
+    if (!res.ok) {
+      setStatus(`Error: ${json.error ?? "UNKNOWN"}`);
+      return;
+    }
+
     setGames(json);
     setStatus("");
   }
 
   useEffect(() => {
     if (!teamId) return;
+
     loadPlayers(teamId);
     loadGames();
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId]);
 
   async function addGame() {
     setStatus("");
+
     if (!teamId) return setStatus("Missing teamId.");
     if (!opponent.trim()) return setStatus("Opponent is required.");
 
@@ -96,7 +109,11 @@ export default function GamesPage() {
     });
 
     const json = await res.json();
-    if (!res.ok) return setStatus(`Error: ${json.error ?? "UNKNOWN"}`);
+
+    if (!res.ok) {
+      setStatus(`Error: ${json.error ?? "UNKNOWN"}`);
+      return;
+    }
 
     setOpponent("");
     setLocation("");
@@ -108,129 +125,219 @@ export default function GamesPage() {
     setNotes("");
 
     await loadGames();
-    setStatus("✅ Game added.");
+    setStatus("Game added.");
   }
 
   return (
-    <main style={{ padding: 24, fontFamily: "system-ui, sans-serif", maxWidth: 1000 }}>
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-        <h1 style={{ fontSize: 28, fontWeight: 700 }}>Games</h1>
-        <nav style={{ display: "flex", gap: 12 }}>
+    <main className={styles.page}>
+      <header className={styles.pageHeader}>
+        <h1 className={styles.title}>Games</h1>
+
+        <nav className={styles.localNav}>
           <Link href="/dashboard">Dashboard</Link>
           <Link href="/players">Players</Link>
           <Link href="/admin/sharing">Sharing</Link>
         </nav>
       </header>
 
-      <section style={{ marginTop: 16, padding: 16, border: "1px solid #ddd", borderRadius: 12 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700 }}>Add game</h2>
+      <details className={styles.card}>
+        <summary className={styles.cardTitle}>Add game</summary>
 
-        <div style={{ display: "grid", gridTemplateColumns: "260px 1fr 1fr", gap: 12, marginTop: 10 }}>
-          <div>
-            <label style={{ display: "block", fontWeight: 600, marginBottom: 6 }}>Date</label>
+        <div className={styles.formGrid3}>
+          <div className={styles.field}>
+            <label className={styles.label}>Date</label>
             <input
+              className={styles.input}
               type="datetime-local"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              style={{ width: "100%", padding: 10, borderRadius: 10, border: "1px solid #ccc" }}
             />
           </div>
 
-          <div>
-            <label style={{ display: "block", fontWeight: 600, marginBottom: 6 }}>Opponent</label>
-            <input value={opponent} onChange={(e) => setOpponent(e.target.value)} style={{ width: "100%", padding: 10, borderRadius: 10, border: "1px solid #ccc" }} />
+          <div className={styles.field}>
+            <label className={styles.label}>Opponent</label>
+            <input
+              className={styles.input}
+              value={opponent}
+              onChange={(e) => setOpponent(e.target.value)}
+            />
           </div>
 
-          <div>
-            <label style={{ display: "block", fontWeight: 600, marginBottom: 6 }}>League</label>
-            <input value={league} onChange={(e) => setLeague(e.target.value)} style={{ width: "100%", padding: 10, borderRadius: 10, border: "1px solid #ccc" }} />
+          <div className={styles.field}>
+            <label className={styles.label}>League</label>
+            <input
+              className={styles.input}
+              value={league}
+              onChange={(e) => setLeague(e.target.value)}
+            />
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 180px", gap: 12, marginTop: 12 }}>
-          <div>
-            <label style={{ display: "block", fontWeight: 600, marginBottom: 6 }}>Location</label>
-            <input value={location} onChange={(e) => setLocation(e.target.value)} style={{ width: "100%", padding: 10, borderRadius: 10, border: "1px solid #ccc" }} />
+        <div className={styles.formGrid3}>
+          <div className={styles.field}>
+            <label className={styles.label}>Location</label>
+            <input
+              className={styles.input}
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+            />
           </div>
 
-          <div>
-            <label style={{ display: "block", fontWeight: 600, marginBottom: 6 }}>Result</label>
-            <select value={result} onChange={(e) => setResult(e.target.value as any)} style={{ width: "100%", padding: 10, borderRadius: 10, border: "1px solid #ccc" }}>
+          <div className={styles.field}>
+            <label className={styles.label}>Result</label>
+            <select
+              className={styles.select}
+              value={result}
+              onChange={(e) =>
+                setResult(e.target.value as "WIN" | "LOSS" | "TIE")
+              }
+            >
               <option value="WIN">Win</option>
               <option value="LOSS">Loss</option>
               <option value="TIE">Tie</option>
             </select>
           </div>
 
-          <div>
-            <label style={{ display: "block", fontWeight: 600, marginBottom: 6 }}>Jersey color</label>
-            <input value={jerseyColor} onChange={(e) => setJerseyColor(e.target.value)} style={{ width: "100%", padding: 10, borderRadius: 10, border: "1px solid #ccc" }} />
+          <div className={styles.field}>
+            <label className={styles.label}>Jersey color</label>
+            <input
+              className={styles.input}
+              value={jerseyColor}
+              onChange={(e) => setJerseyColor(e.target.value)}
+            />
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "160px 160px 1fr", gap: 12, marginTop: 12 }}>
-          <div>
-            <label style={{ display: "block", fontWeight: 600, marginBottom: 6 }}>Goals For</label>
-            <input value={goalsFor} onChange={(e) => setGoalsFor(e.target.value)} style={{ width: "100%", padding: 10, borderRadius: 10, border: "1px solid #ccc" }} />
+        <div className={styles.formGridScore}>
+          <div className={styles.field}>
+            <label className={styles.label}>Goals For</label>
+            <input
+              className={styles.input}
+              inputMode="numeric"
+              value={goalsFor}
+              onChange={(e) => setGoalsFor(e.target.value)}
+            />
           </div>
-          <div>
-            <label style={{ display: "block", fontWeight: 600, marginBottom: 6 }}>Goals Against</label>
-            <input value={goalsAgainst} onChange={(e) => setGoalsAgainst(e.target.value)} style={{ width: "100%", padding: 10, borderRadius: 10, border: "1px solid #ccc" }} />
+
+          <div className={styles.field}>
+            <label className={styles.label}>Goals Against</label>
+            <input
+              className={styles.input}
+              inputMode="numeric"
+              value={goalsAgainst}
+              onChange={(e) => setGoalsAgainst(e.target.value)}
+            />
           </div>
-          <div>
-            <label style={{ display: "block", fontWeight: 600, marginBottom: 6 }}>Player of the Game</label>
-            <select value={playerOfGameId} onChange={(e) => setPlayerOfGameId(e.target.value)} style={{ width: "100%", padding: 10, borderRadius: 10, border: "1px solid #ccc" }}>
-              <option value="">(none)</option>
+
+          <div className={styles.field}>
+            <label className={styles.label}>Player of the Game</label>
+            <select
+              className={styles.select}
+              value={playerOfGameId}
+              onChange={(e) => setPlayerOfGameId(e.target.value)}
+            >
+              <option value="">None</option>
               {players.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.number ? `${p.number} - ` : ""}{p.name}
+                  {p.number ? `${p.number} - ` : ""}
+                  {p.name}
                 </option>
               ))}
             </select>
           </div>
         </div>
 
-        <div style={{ marginTop: 12 }}>
-          <label style={{ display: "block", fontWeight: 600, marginBottom: 6 }}>Notes</label>
-          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} style={{ width: "100%", padding: 10, borderRadius: 10, border: "1px solid #ccc" }} />
+        <div className={styles.field} style={{ marginTop: 12 }}>
+          <label className={styles.label}>Notes</label>
+          <textarea
+            className={styles.textarea}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+          />
         </div>
 
-        <button onClick={addGame} style={{ marginTop: 14, padding: "10px 14px", borderRadius: 10, border: "1px solid #ccc", cursor: "pointer", fontWeight: 700 }}>
+        <button className={styles.primaryButton} onClick={addGame}>
           Add Game
         </button>
+      </details>
 
-        {status && <p style={{ marginTop: 10 }}>{status}</p>}
-      </section>
+      {status && <p className={styles.status}>{status}</p>}
 
-      <section style={{ marginTop: 16 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700 }}>Game log</h2>
+      <section style={{ marginTop: 18 }}>
+        <h2 className={styles.cardTitle}>Game Log ({games.length})</h2>
 
-        <div style={{ marginTop: 10, border: "1px solid #ddd", borderRadius: 12, overflow: "hidden" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "180px 1fr 140px 140px 140px 120px", fontWeight: 700, padding: 12, background: "#f7f7f7" }}>
+        <div className={styles.desktopLog}>
+          <div
+            className={`${styles.desktopRow} ${styles.desktopHeader}`}
+          >
             <div>Date</div>
             <div>Opponent</div>
             <div>League</div>
             <div>Result</div>
             <div>Score</div>
-            <div></div>
+            <div />
           </div>
 
           {games.map((g) => (
-            <div key={g.id} style={{ display: "grid", gridTemplateColumns: "180px 1fr 140px 140px 140px 120px", padding: 12, borderTop: "1px solid #eee" }}>
+            <div
+              key={g.id}
+              className={`${styles.desktopRow} ${styles.desktopGame}`}
+            >
               <div>{new Date(g.date).toLocaleString()}</div>
               <div>{g.opponent}</div>
               <div>{g.league ?? ""}</div>
               <div>{g.result}</div>
-              <div>{g.goalsFor}-{g.goalsAgainst}</div>
               <div>
-                <Link href={`/games/${g.id}`} style={{ fontWeight: 700 }}>
-                  Edit
-                </Link>
+                {g.goalsFor}-{g.goalsAgainst}
+              </div>
+              <div>
+                <Link href={`/games/${g.id}`}>Edit</Link>
               </div>
             </div>
           ))}
+        </div>
 
-          {games.length === 0 && <div style={{ padding: 12 }}>No games yet.</div>}
+        <div className={styles.mobileLog}>
+          {games.map((g) => {
+            const d = new Date(g.date);
+
+            return (
+              <Link
+                key={g.id}
+                href={`/games/${g.id}`}
+                className={styles.gameCard}
+              >
+                <div className={styles.gameCardTop}>
+                  <div className={styles.gameDate}>
+                    <div className={styles.gameMonth}>
+                      {d.toLocaleDateString(undefined, { month: "short" })}
+                    </div>
+                    <div className={styles.gameDay}>
+                      {d.getDate()}
+                    </div>
+                  </div>
+
+                  <div className={styles.gameInfo}>
+                    <div className={styles.opponent}>
+                      vs. {g.opponent}
+                    </div>
+
+                    <div className={styles.gameMeta}>
+                      {g.league ?? "No league"} • {g.result}
+                    </div>
+                  </div>
+
+                  <div className={styles.score}>
+                    {g.goalsFor}-{g.goalsAgainst}
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+
+          {games.length === 0 && (
+            <div className={styles.gameCard}>No games yet.</div>
+          )}
         </div>
       </section>
     </main>
