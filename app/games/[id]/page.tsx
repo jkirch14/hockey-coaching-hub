@@ -13,7 +13,8 @@ type Game = {
   location: string | null;
   opponent: string;
   league: string | null;
-  result: "WIN" | "LOSS" | "TIE";
+  status: "SCHEDULED" | "FINAL" | "CANCELLED";
+  result: "WIN" | "LOSS" | "TIE" | null;
   goalsFor: number;
   goalsAgainst: number;
   jerseyColor: string | null;
@@ -51,7 +52,8 @@ export default function GameEditPage() {
   const [location, setLocation] = useState("");
   const [opponent, setOpponent] = useState("");
   const [league, setLeague] = useState("");
-  const [result, setResult] = useState<"WIN" | "LOSS" | "TIE">("WIN");
+  const [result, setResult] = useState<"" | "WIN" | "LOSS" | "TIE">("");
+  const [statusValue, setStatusValue] = useState<"SCHEDULED" | "FINAL" | "CANCELLED">("FINAL");
   const [goalsFor, setGoalsFor] = useState("0");
   const [goalsAgainst, setGoalsAgainst] = useState("0");
   const [playerOfGameId, setPlayerOfGameId] = useState("");
@@ -87,7 +89,8 @@ export default function GameEditPage() {
     setLocation(json.location ?? "");
     setOpponent(json.opponent ?? "");
     setLeague(json.league ?? "");
-    setResult(json.result);
+    setResult(json.result ?? "");
+    setStatusValue(json.status ?? "FINAL");
     setGoalsFor(String(json.goalsFor ?? 0));
     setGoalsAgainst(String(json.goalsAgainst ?? 0));
     setPlayerOfGameId(json.playerOfGameId ?? "");
@@ -106,6 +109,11 @@ export default function GameEditPage() {
   }, [teamId]);
 
   async function save() {
+    if (statusValue === "FINAL" && !result) {
+      setStatus("Error: Select a result for a final game.");
+      return;
+    }
+
     setStatus("Saving...");
 
     const res = await fetch(`/api/games/${params.id}`, {
@@ -117,7 +125,8 @@ export default function GameEditPage() {
         location: location.trim() || null,
         opponent: opponent.trim(),
         league: league.trim() || null,
-        result,
+        status: statusValue,
+        result: statusValue === "FINAL" ? result || null : null,
         goalsFor: Number(goalsFor || "0"),
         goalsAgainst: Number(goalsAgainst || "0"),
         playerOfGameId: playerOfGameId || null,
@@ -217,14 +226,40 @@ export default function GameEditPage() {
           </div>
 
           <div className={styles.field}>
+            <label className={styles.label}>Status</label>
+            <select
+              className={styles.select}
+              value={statusValue}
+              onChange={(e) => {
+                const next = e.target.value as
+                  | "SCHEDULED"
+                  | "FINAL"
+                  | "CANCELLED";
+
+                setStatusValue(next);
+
+                if (next !== "FINAL") {
+                  setResult("");
+                }
+              }}
+            >
+              <option value="SCHEDULED">Scheduled</option>
+              <option value="FINAL">Final</option>
+              <option value="CANCELLED">Cancelled</option>
+            </select>
+          </div>
+
+          <div className={styles.field}>
             <label className={styles.label}>Result</label>
             <select
               className={styles.select}
               value={result}
+              disabled={statusValue !== "FINAL"}
               onChange={(e) =>
-                setResult(e.target.value as "WIN" | "LOSS" | "TIE")
+                setResult(e.target.value as "" | "WIN" | "LOSS" | "TIE")
               }
             >
+              <option value="">Select result</option>
               <option value="WIN">Win</option>
               <option value="LOSS">Loss</option>
               <option value="TIE">Tie</option>
@@ -319,4 +354,8 @@ export default function GameEditPage() {
     </main>
   );
 }
+
+
+
+
 

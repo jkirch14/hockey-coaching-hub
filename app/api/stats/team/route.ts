@@ -1,4 +1,4 @@
-export const runtime = "nodejs";
+﻿export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
@@ -15,20 +15,20 @@ export async function GET(req: Request) {
 
   const [games, sums, leagueGroups, goalieShutouts] = await Promise.all([
     db.game.findMany({
-      where: { teamId },
+      where: { teamId, status: "FINAL" },
       select: { result: true, goalsFor: true, goalsAgainst: true, league: true },
     }),
     db.lineupEntry.aggregate({
-      where: { teamId },
+      where: { teamId, game: { status: "FINAL" } },
       _sum: { penalties: true },
     }),
     db.game.groupBy({
       by: ["league", "result"],
-      where: { teamId },
+      where: { teamId, status: "FINAL" },
       _count: { _all: true },
     }),
     db.lineupEntry.findMany({
-      where: { teamId, position: "G", shutout: true },
+      where: { teamId, position: "G", shutout: true, game: { status: "FINAL" } },
       select: { gameId: true },
       distinct: ["gameId"],
     }),
@@ -49,7 +49,7 @@ export async function GET(req: Request) {
     goalsAgainst += g.goalsAgainst ?? 0;
   }
 
-  const penalties = sums._sum.penalties ?? 0;
+  const penalties = sums._sum?.penalties ?? 0;
   const shutouts = goalieShutouts.length;
   const goalDiff = goalsFor - goalsAgainst;
 
@@ -92,3 +92,5 @@ export async function GET(req: Request) {
     return handleApiError(err);
   }
 }
+
+

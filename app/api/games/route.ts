@@ -1,4 +1,4 @@
-export const runtime = "nodejs";
+﻿export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -11,7 +11,8 @@ const CreateGame = z.object({
   location: z.string().optional(),
   opponent: z.string().min(1),
   league: z.string().optional(),
-  result: z.enum(["WIN", "LOSS", "TIE"]),
+  status: z.enum(["SCHEDULED", "FINAL", "CANCELLED"]).default("FINAL"),
+  result: z.enum(["WIN", "LOSS", "TIE"]).nullable().optional(),
   goalsFor: z.number().int().min(0).default(0),
   goalsAgainst: z.number().int().min(0).default(0),
   playerOfGameId: z.string().optional(),
@@ -48,7 +49,8 @@ export async function POST(req: Request) {
       location: input.location || null,
       opponent: input.opponent,
       league: input.league || null,
-      result: input.result,
+      status: input.status,
+      result: input.result ?? null,
       goalsFor: input.goalsFor ?? 0,
       goalsAgainst: input.goalsAgainst ?? 0,
       playerOfGameId: input.playerOfGameId || null,
@@ -60,3 +62,4 @@ export async function POST(req: Request) {
 
   return NextResponse.json(game);
 }
+

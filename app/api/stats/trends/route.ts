@@ -1,4 +1,4 @@
-export const runtime = "nodejs";
+﻿export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
@@ -14,7 +14,7 @@ export async function GET(req: Request) {
   await requireTeamRole(teamId, "VIEWER");
 
   const games = await db.game.findMany({
-    where: { teamId },
+    where: { teamId, status: "FINAL" },
     orderBy: [{ date: "asc" }],
     select: {
       id: true,
@@ -43,3 +43,4 @@ export async function GET(req: Request) {
     return handleApiError(err);
   }
 }
+

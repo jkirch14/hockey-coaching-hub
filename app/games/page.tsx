@@ -12,7 +12,8 @@ type Game = {
   location: string | null;
   opponent: string;
   league: string | null;
-  result: "WIN" | "LOSS" | "TIE";
+  status: "SCHEDULED" | "FINAL" | "CANCELLED";
+  result: "WIN" | "LOSS" | "TIE" | null;
   goalsFor: number;
   goalsAgainst: number;
   jerseyColor: string | null;
@@ -308,9 +309,13 @@ export default function GamesPage() {
               <div>{new Date(g.date).toLocaleString()}</div>
               <div>{g.opponent}</div>
               <div>{g.league ?? ""}</div>
-              <div>{g.result}</div>
+              <div>{g.status === "FINAL" ? g.result ?? "Final" : g.status}</div>
               <div>
-                {g.goalsFor}-{g.goalsAgainst}
+                {g.status === "FINAL"
+                  ? `${g.goalsFor}-${g.goalsAgainst}`
+                  : g.status === "CANCELLED"
+                    ? "Cancelled"
+                    : "Scheduled"}
               </div>
               <div>
                 <Link href={`/games/${g.id}`}>Edit</Link>
@@ -345,12 +350,16 @@ export default function GamesPage() {
                     </div>
 
                     <div className={styles.gameMeta}>
-                      {g.league ?? "No league"} • {g.result}
+                      {g.league ?? "No league"} • {g.status === "FINAL" ? g.result ?? "Final" : g.status}
                     </div>
                   </div>
 
                   <div className={styles.score}>
-                    {g.goalsFor}-{g.goalsAgainst}
+                    {g.status === "FINAL"
+                      ? `${g.goalsFor}-${g.goalsAgainst}`
+                      : g.status === "CANCELLED"
+                        ? "Cancelled"
+                        : "Scheduled"}
                   </div>
                 </div>
               </Link>
@@ -365,4 +374,6 @@ export default function GamesPage() {
     </main>
   );
 }
+
+
 

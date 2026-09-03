@@ -1,4 +1,4 @@
-export const runtime = "nodejs";
+﻿export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -11,7 +11,8 @@ const UpdateGame = z.object({
   location: z.string().nullable().optional(),
   opponent: z.string().min(1).optional(),
   league: z.string().nullable().optional(),
-  result: z.enum(["WIN", "LOSS", "TIE"]).optional(),
+  status: z.enum(["SCHEDULED", "FINAL", "CANCELLED"]).optional(),
+  result: z.enum(["WIN", "LOSS", "TIE"]).nullable().optional(),
   goalsFor: z.number().int().min(0).optional(),
   goalsAgainst: z.number().int().min(0).optional(),
   playerOfGameId: z.string().nullable().optional(),
@@ -51,7 +52,8 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
       location: input.location === undefined ? undefined : input.location,
       opponent: input.opponent ?? undefined,
       league: input.league === undefined ? undefined : input.league,
-      result: input.result ?? undefined,
+      status: input.status ?? undefined,
+      result: input.result === undefined ? undefined : input.result,
       goalsFor: input.goalsFor ?? undefined,
       goalsAgainst: input.goalsAgainst ?? undefined,
       playerOfGameId: input.playerOfGameId === undefined ? undefined : input.playerOfGameId,
@@ -79,3 +81,4 @@ export async function DELETE(req: Request, ctx: { params: Promise<{ id: string }
 
   return NextResponse.json({ ok: true });
 }
+
