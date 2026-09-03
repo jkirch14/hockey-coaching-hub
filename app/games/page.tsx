@@ -35,7 +35,8 @@ export default function GamesPage() {
     if (
       !status ||
       status.startsWith("Adding") ||
-      status.startsWith("Loading")
+      status.startsWith("Loading") ||
+      status.startsWith("Syncing")
     ) return;
 
     const timer = window.setTimeout(() => {
@@ -97,6 +98,31 @@ export default function GamesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId]);
 
+  async function syncGameSheet() {
+    if (!teamId) {
+      setStatus("Error: Missing teamId.");
+      return;
+    }
+
+    setStatus("Syncing GameSheet...");
+
+    const res = await fetch("/api/integrations/gamesheet/sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ teamId }),
+    });
+
+    const json = await res.json();
+
+    if (!res.ok) {
+      setStatus(`Error: ${json.error ?? "GameSheet sync failed"}`);
+      return;
+    }
+
+    await loadGames();
+    setStatus(`GameSheet synced ${json.count ?? 0} games.`);
+  }
+
   async function addGame() {
     setStatus("");
 
@@ -154,6 +180,18 @@ export default function GamesPage() {
           <Link href="/admin/sharing">Sharing</Link>
         </nav>
       </header>
+
+      <div style={{ marginBottom: 14 }}>
+        <button
+          className={styles.primaryButton}
+          onClick={syncGameSheet}
+          disabled={status === "Syncing GameSheet..."}
+        >
+          {status === "Syncing GameSheet..."
+            ? "Syncing..."
+            : "Sync GameSheet"}
+        </button>
+      </div>
 
       <details className={styles.card}>
         <summary className={styles.cardTitle}>Add game</summary>
@@ -374,6 +412,9 @@ export default function GamesPage() {
     </main>
   );
 }
+
+
+
 
 
 
