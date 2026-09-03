@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { requireTeamRole } from "@/lib/rbac";
 
 export async function GET(req: NextRequest) {
   try {
@@ -16,6 +17,8 @@ export async function GET(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    await requireTeamRole(teamId, "VIEWER");
 
     const observations = await db.coachObservation.findMany({
       where: {
@@ -68,6 +71,8 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    await requireTeamRole(teamId, "ADMIN");
 
     const observation = await db.coachObservation.create({
       data: {

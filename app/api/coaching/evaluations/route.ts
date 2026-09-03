@@ -1,19 +1,23 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { requireTeamRole } from "@/lib/rbac";
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
 
+    const teamId = searchParams.get("teamId");
     const seasonId = searchParams.get("seasonId");
     const playerId = searchParams.get("playerId");
 
-    if (!seasonId) {
+    if (!teamId || !seasonId) {
       return NextResponse.json(
-        { error: "seasonId is required" },
+        { error: "teamId and seasonId are required" },
         { status: 400 }
       );
     }
+
+    await requireTeamRole(teamId, "VIEWER");
 
     const evaluations = await db.playerEvaluation.findMany({
       where: {
@@ -45,6 +49,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
 
     const {
+      teamId,
       seasonId,
       playerId,
       coachRank,
@@ -67,12 +72,14 @@ export async function POST(req: NextRequest) {
       coachNotes,
     } = body;
 
-    if (!seasonId || !playerId) {
+    if (!teamId || !seasonId || !playerId) {
       return NextResponse.json(
-        { error: "seasonId and playerId are required" },
+        { error: "teamId, seasonId and playerId are required" },
         { status: 400 }
       );
     }
+
+    await requireTeamRole(teamId, "ADMIN");
 
     const evaluation = await db.playerEvaluation.upsert({
       where: {
